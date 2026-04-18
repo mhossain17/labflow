@@ -2,6 +2,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { UserRole } from '@/types/app'
+import { logAuditEvent } from '@/lib/audit'
+import { getProfile } from '@/lib/auth/session'
 
 export async function updateOrganization(
   orgId: string,
@@ -60,6 +62,56 @@ export async function toggleFeatureFlag(
   }
 
   revalidatePath('/admin/feature-flags')
+}
+
+export async function deleteStudentData(studentId: string) {
+  const supabase = await createClient()
+
+  const actor = await getProfile()
+  if (!actor) throw new Error('Unauthorized')
+
+  // Delete in dependency order
+  const tables = [
+    'pre_lab_responses',
+    'step_responses',
+    'help_requests',
+    'student_lab_runs',
+    'class_enrollments',
+  ] as const
+
+  for (const table of tables) {
+    const { error } = await (supabase as any)
+      .from(table)
+      .delete()
+      .eq('student_id', studentId)
+    if (error) throw error
+  }
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', studentId)
+  if (profileError) throw profileError
+
+  // Delete auth user via service role
+  try {
+    const adminClient = await createAdminClient()
+    if (adminClient) {
+      await adminClient.auth.admin.deleteUser(studentId)
+    }
+  } catch {
+    // profile already deleted — auth user deletion is best-effort
+  }
+
+  await logAuditEvent({
+    actorId: actor.id,
+    actorRole: actor.role,
+    action: 'delete_student_data',
+    targetTable: 'profiles',
+    targetId: studentId,
+  })
+
+  revalidatePath('/admin/users')
 }
 
 export async function updateUserRole(profileId: string, role: UserRole) {

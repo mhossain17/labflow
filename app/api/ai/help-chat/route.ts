@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAnthropicClient } from '@/lib/ai/anthropic'
 import { checkFeatureFlag } from '@/lib/ai/check-feature-flag'
 import { checkRateLimit, getOrgId } from '@/lib/ai/rate-limit'
+import { buildHelpChatSystemPrompt } from '@/lib/ai/prompts/help-chat'
 
 export const runtime = 'nodejs'
 
@@ -30,26 +31,28 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { stepInstructions, studentMessage, conversationHistory, hintLevel, helpRequestId } =
-    await request.json()
+  const {
+    stepInstructions,
+    studentMessage,
+    conversationHistory,
+    hintLevel,
+    stuckCount,
+    troubleshootingText,
+    checkpoint,
+    dataFieldLabels,
+    helpRequestId,
+  } = await request.json()
 
   const anthropic = getAnthropicClient()
 
-  const systemPrompt = `You are a helpful science lab assistant using the Socratic method.
-Your role: Guide students to discover answers themselves. NEVER give direct answers.
-Hint level: ${hintLevel} (0=ask guiding questions only, 1=give a small hint, 2=give a more direct hint but still not the answer)
-
-Current lab step instructions: ${stepInstructions}
-
-Rules:
-- Ask one guiding question at a time
-- Reference what the student has already tried
-- Be encouraging and patient
-- If hintLevel=0, only ask questions
-- If hintLevel=1, you may share one observation or hint
-- If hintLevel=2, you may share a more direct hint but still lead the student to discover
-- Never reveal the complete answer
-- Keep responses concise (2-4 sentences)`
+  const systemPrompt = buildHelpChatSystemPrompt({
+    stepInstructions,
+    troubleshootingText,
+    checkpoint,
+    dataFieldLabels,
+    hintLevel: hintLevel ?? 0,
+    stuckCount: stuckCount ?? 0,
+  })
 
   const messages = [
     ...(conversationHistory ?? []).map((turn: { role: string; content: string }) => ({
@@ -59,11 +62,10 @@ Rules:
     { role: 'user' as const, content: studentMessage },
   ]
 
-  // helpRequestId is accepted for future use (saving conversation)
   void helpRequestId
 
   const stream = anthropic.messages.stream({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
     system: [
       {

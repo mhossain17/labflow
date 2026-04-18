@@ -2,13 +2,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Paintbrush, Users, Settings, ToggleLeft, LayoutList, FlaskConical, BookOpen, BarChart3 } from 'lucide-react'
+import { Paintbrush, Users, Settings, ToggleLeft, LayoutList, FlaskConical, BookOpen, BarChart3, ClipboardList } from 'lucide-react'
 
 const adminLinks = [
   { href: '/admin/branding', label: 'Branding', icon: Paintbrush },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
   { href: '/admin/feature-flags', label: 'Feature Flags', icon: ToggleLeft },
+  { href: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
 ]
 
 const teacherLinks = [

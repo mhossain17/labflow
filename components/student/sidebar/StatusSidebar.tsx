@@ -22,6 +22,8 @@ interface Props {
   stepInstructions?: string
   stepId?: string
   troubleshootingText?: string | null
+  checkpoint?: string | null
+  dataFieldLabels?: string[]
   existingHelpRequestId?: string | null
 }
 
@@ -36,6 +38,8 @@ export function StatusSidebar({
   stepInstructions,
   stepId,
   troubleshootingText,
+  checkpoint,
+  dataFieldLabels,
   existingHelpRequestId,
 }: Props) {
   const pathname = usePathname()
@@ -104,6 +108,8 @@ export function StatusSidebar({
             stepId={stepId}
             stepInstructions={stepInstructions}
             troubleshootingText={troubleshootingText}
+            checkpoint={checkpoint}
+            dataFieldLabels={dataFieldLabels}
             existingHelpRequestId={existingHelpRequestId}
           />
         </div>

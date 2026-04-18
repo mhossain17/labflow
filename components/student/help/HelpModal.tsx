@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button'
 import { TroubleshootingGuide } from './TroubleshootingGuide'
 import { HelpChat } from './HelpChat'
 import { createHelpRequest, escalateHelpRequest } from '@/features/lab-runner/actions'
-import { HelpCircle, X } from 'lucide-react'
+import { HelpCircle, X, Info } from 'lucide-react'
+
+const DISCLOSURE_KEY = 'labflow_ai_disclosure_dismissed'
 
 type Stage = 'troubleshooting' | 'chat' | 'escalated'
 
@@ -14,6 +16,8 @@ interface Props {
   stepId?: string
   stepInstructions?: string
   troubleshootingText?: string | null
+  checkpoint?: string | null
+  dataFieldLabels?: string[]
   existingHelpRequestId?: string | null
 }
 
@@ -23,6 +27,8 @@ export function HelpModal({
   stepId,
   stepInstructions = '',
   troubleshootingText,
+  checkpoint,
+  dataFieldLabels,
   existingHelpRequestId,
 }: Props) {
   const [open, setOpen] = useState(false)
@@ -32,10 +38,14 @@ export function HelpModal({
   const [helpRequestId, setHelpRequestId] = useState<string | null>(
     existingHelpRequestId ?? null
   )
+  const [showDisclosure, setShowDisclosure] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   async function openModal() {
     setOpen(true)
+    if (typeof window !== 'undefined' && !localStorage.getItem(DISCLOSURE_KEY)) {
+      setShowDisclosure(true)
+    }
     // Create help request if none exists
     if (!helpRequestId) {
       startTransition(async () => {
@@ -90,6 +100,26 @@ export function HelpModal({
               </button>
             </div>
 
+            {showDisclosure && (
+              <div className="flex items-start gap-2 rounded-md bg-muted px-3 py-2.5 text-xs text-muted-foreground">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>
+                  Your questions are processed by Anthropic&apos;s Claude AI. No personal information
+                  beyond your lab context is shared.
+                </span>
+                <button
+                  onClick={() => {
+                    localStorage.setItem(DISCLOSURE_KEY, '1')
+                    setShowDisclosure(false)
+                  }}
+                  className="ml-auto shrink-0 text-muted-foreground hover:text-foreground"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
             {stage === 'troubleshooting' && (
               <TroubleshootingGuide
                 troubleshooting={troubleshootingText ?? null}
@@ -100,6 +130,9 @@ export function HelpModal({
             {stage === 'chat' && (
               <HelpChat
                 stepInstructions={stepInstructions}
+                troubleshootingText={troubleshootingText}
+                checkpoint={checkpoint}
+                dataFieldLabels={dataFieldLabels}
                 helpRequestId={helpRequestId}
                 onEscalate={handleEscalate}
               />

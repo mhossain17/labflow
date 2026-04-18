@@ -19,6 +19,9 @@ const signupSchema = z
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
     orgCode: z.string().min(1, 'School code is required'),
+    ageConsent: z.boolean().refine((v) => v === true, {
+      message: 'You must confirm the student is 13 or older, or that the school has obtained parental consent',
+    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -37,6 +40,7 @@ export default function SignupPage() {
     formState: { errors, isSubmitting },
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
+    defaultValues: { ageConsent: false },
   })
 
   async function onSubmit(data: SignupForm) {
@@ -207,6 +211,27 @@ export default function SignupPage() {
               <p className="text-sm text-destructive">{errors.orgCode.message}</p>
             )}
             <p className="text-xs text-muted-foreground">Ask your teacher for your school code.</p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
+                {...register('ageConsent')}
+              />
+              <span className="text-sm text-muted-foreground leading-snug">
+                I confirm this student is 13 years of age or older, or that the school has obtained
+                verifiable parental consent as required by{' '}
+                <a href="/coppa" className="text-primary hover:underline underline-offset-4" target="_blank">
+                  COPPA
+                </a>
+                .
+              </span>
+            </label>
+            {errors.ageConsent && (
+              <p className="text-sm text-destructive">{errors.ageConsent.message}</p>
+            )}
           </div>
 
           <Button type="submit" disabled={isSubmitting} className="w-full">

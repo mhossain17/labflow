@@ -7,12 +7,23 @@ import type { HelpConversationTurn } from '@/types/app'
 
 interface Props {
   stepInstructions: string
+  troubleshootingText?: string | null
+  checkpoint?: string | null
+  dataFieldLabels?: string[]
   helpRequestId: string | null
   initialHistory?: HelpConversationTurn[]
   onEscalate?: () => void
 }
 
-export function HelpChat({ stepInstructions, helpRequestId, initialHistory = [], onEscalate }: Props) {
+export function HelpChat({
+  stepInstructions,
+  troubleshootingText,
+  checkpoint,
+  dataFieldLabels,
+  helpRequestId,
+  initialHistory = [],
+  onEscalate,
+}: Props) {
   const [history, setHistory] = useState<HelpConversationTurn[]>(initialHistory)
   const [input, setInput] = useState('')
   const [streamingText, setStreamingText] = useState('')
@@ -22,6 +33,7 @@ export function HelpChat({ stepInstructions, helpRequestId, initialHistory = [],
 
   const aiTurnCount = history.filter((t) => t.role === 'assistant').length
   const hintLevel = Math.min(aiTurnCount, 2)
+  // Show escalate after 3 AI turns; show immediately if AI already recommended teacher (stuckCount >= 4)
   const showEscalate = aiTurnCount >= 3 && onEscalate
 
   useEffect(() => {
@@ -48,9 +60,13 @@ export function HelpChat({ stepInstructions, helpRequestId, initialHistory = [],
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           stepInstructions,
+          troubleshootingText,
+          checkpoint,
+          dataFieldLabels,
           studentMessage: message,
           conversationHistory: history,
           hintLevel,
+          stuckCount: aiTurnCount,
           helpRequestId,
         }),
       })

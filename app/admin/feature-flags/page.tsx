@@ -3,6 +3,8 @@ import { getProfile } from '@/lib/auth/session'
 import { listFeatureFlags } from '@/features/admin/queries'
 import { FeatureFlagToggle } from '@/components/admin/FeatureFlagToggle'
 
+const AI_FLAGS = new Set(['ai_lab_generation', 'help_chat'])
+
 const FLAG_META: Record<string, { label: string; description: string }> = {
   ai_lab_generation: {
     label: 'AI Lab Generation',
@@ -48,14 +50,30 @@ export default async function FeatureFlagsPage() {
         {ALL_FLAGS.map((flagKey) => {
           const meta = FLAG_META[flagKey]
           return (
-            <FeatureFlagToggle
-              key={flagKey}
-              orgId={orgId}
-              flagKey={flagKey}
-              label={meta.label}
-              description={meta.description}
-              initialEnabled={flagMap[flagKey] ?? false}
-            />
+            <div key={flagKey}>
+              <FeatureFlagToggle
+                orgId={orgId}
+                flagKey={flagKey}
+                label={meta.label}
+                description={meta.description}
+                initialEnabled={flagMap[flagKey] ?? false}
+              />
+              {AI_FLAGS.has(flagKey) && (
+                <p className="pb-3 -mt-1 text-xs text-amber-700 dark:text-amber-400">
+                  When enabled, student lab help conversations are sent to Anthropic&apos;s Claude API for processing.
+                  Review{' '}
+                  <a
+                    href="https://www.anthropic.com/legal/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:opacity-80"
+                  >
+                    Anthropic&apos;s privacy policy
+                  </a>
+                  {' '}and obtain a Data Processing Agreement before enabling in production.
+                </p>
+              )}
+            </div>
           )
         })}
       </div>

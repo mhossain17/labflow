@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password']
+const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password', '/privacy', '/terms', '/coppa']
 const AUTH_ONLY_PATHS = ['/login', '/signup', '/forgot-password']
 
 const ROLE_PATHS: Record<string, string[]> = {

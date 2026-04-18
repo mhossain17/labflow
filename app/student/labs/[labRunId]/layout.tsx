@@ -39,6 +39,12 @@ export default async function LabRunLayout({ children, params }: Props) {
               stepId={currentStepData?.id}
               stepInstructions={currentStepData?.instructions}
               troubleshootingText={currentStepData?.troubleshooting}
+              checkpoint={currentStepData?.checkpoint}
+              dataFieldLabels={
+                (currentStepData?.data_entry_fields ?? []).map(
+                  (f: { label: string }) => f.label
+                )
+              }
             />
           ) : (
             <p className="text-sm text-muted-foreground">Loading...</p>

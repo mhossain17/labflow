@@ -1,7 +1,9 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import { Download } from 'lucide-react'
 import { updateUserRole } from '@/features/admin/actions'
+import { DeleteStudentDialog } from '@/components/admin/DeleteStudentDialog'
 import type { UserRole } from '@/types/app'
 
 interface User {
@@ -89,9 +91,7 @@ export function UserTable({ users, currentUserId }: UserTableProps) {
             <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
             <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
             <th className="px-4 py-3 text-left font-medium text-muted-foreground">Role</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground sr-only">
-              Actions
-            </th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -121,8 +121,26 @@ export function UserTable({ users, currentUserId }: UserTableProps) {
                   />
                 </td>
                 <td className="px-4 py-3">
-                  {isSelf && (
-                    <span className="text-xs text-muted-foreground">Cannot edit own role</span>
+                  {isSelf ? (
+                    <span className="text-xs text-muted-foreground">Cannot edit own account</span>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <a
+                        href={`/api/admin/export-student-data?studentId=${user.id}`}
+                        download
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        title="Export student data"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Export
+                      </a>
+                      {user.role === 'student' && (
+                        <DeleteStudentDialog
+                          userId={user.id}
+                          userName={`${user.first_name} ${user.last_name}`}
+                        />
+                      )}
+                    </div>
                   )}
                 </td>
               </tr>
