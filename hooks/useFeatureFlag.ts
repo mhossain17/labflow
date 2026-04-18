@@ -6,14 +6,9 @@ export function useFeatureFlag(flagKey: string, initialValue?: boolean): boolean
   const [enabled, setEnabled] = useState<boolean | null>(initialValue ?? null)
 
   useEffect(() => {
-    if (initialValue !== undefined) {
-      setEnabled(initialValue)
-      return
-    }
+    if (initialValue !== undefined) return
     const supabase = createClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any
-    db
+    supabase
       .from('feature_flags')
       .select('enabled')
       .eq('flag_key', flagKey)
@@ -23,5 +18,5 @@ export function useFeatureFlag(flagKey: string, initialValue?: boolean): boolean
       })
   }, [flagKey, initialValue])
 
-  return enabled
+  return initialValue ?? enabled
 }

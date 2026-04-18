@@ -29,9 +29,10 @@ function filterRuns(runs: StudentRunSnapshot[], filter: FilterType): StudentRunS
 interface MonitorGridProps {
   runs: StudentRunSnapshot[]
   totalSteps: number
+  onStudentClick?: (run: StudentRunSnapshot) => void
 }
 
-export function MonitorGrid({ runs, totalSteps }: MonitorGridProps) {
+export function MonitorGrid({ runs, totalSteps, onStudentClick }: MonitorGridProps) {
   const [filter, setFilter] = useState<FilterType>('all')
   // Force re-render of timestamps every 30s
   const [, setTick] = useState(0)
@@ -79,7 +80,7 @@ export function MonitorGrid({ runs, totalSteps }: MonitorGridProps) {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map(run => (
-            <StudentCard key={run.student_id} run={run} totalSteps={totalSteps} />
+            <StudentCard key={run.student_id} run={run} totalSteps={totalSteps} onClick={onStudentClick ? () => onStudentClick(run) : undefined} />
           ))}
         </div>
       )}

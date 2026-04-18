@@ -1,6 +1,7 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import type { UserRole } from '@/types/app'
 
 export async function updateOrganization(
   orgId: string,
@@ -12,8 +13,7 @@ export async function updateOrganization(
   }
 ) {
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('organizations')
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', orgId)
@@ -24,8 +24,7 @@ export async function updateOrganization(
 
 export async function updateOrganizationLogo(orgId: string, logoUrl: string) {
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('organizations')
     .update({ logo_url: logoUrl, updated_at: new Date().toISOString() })
     .eq('id', orgId)
@@ -39,10 +38,8 @@ export async function toggleFeatureFlag(
   enabled: boolean
 ) {
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
   // Try update first, then upsert
-  const { data: existing } = await db
+  const { data: existing } = await supabase
     .from('feature_flags')
     .select('id')
     .eq('organization_id', orgId)
@@ -50,13 +47,13 @@ export async function toggleFeatureFlag(
     .maybeSingle()
 
   if (existing) {
-    const { error } = await db
+    const { error } = await supabase
       .from('feature_flags')
       .update({ enabled })
       .eq('id', existing.id)
     if (error) throw error
   } else {
-    const { error } = await db
+    const { error } = await supabase
       .from('feature_flags')
       .insert({ organization_id: orgId, flag_key: flagKey, enabled })
     if (error) throw error
@@ -65,12 +62,10 @@ export async function toggleFeatureFlag(
   revalidatePath('/admin/feature-flags')
 }
 
-export async function updateUserRole(profileId: string, role: string) {
+export async function updateUserRole(profileId: string, role: UserRole) {
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
 
-  const { error } = await db
+  const { error } = await supabase
     .from('profiles')
     .update({ role, updated_at: new Date().toISOString() })
     .eq('id', profileId)
@@ -78,7 +73,7 @@ export async function updateUserRole(profileId: string, role: string) {
 
   // Also update app_metadata via Supabase Admin if available
   try {
-    const adminClient = createAdminClient()
+    const adminClient = await createAdminClient()
     if (adminClient) {
       await adminClient.auth.admin.updateUserById(profileId, {
         app_metadata: { role },
@@ -91,11 +86,11 @@ export async function updateUserRole(profileId: string, role: string) {
   revalidatePath('/admin/users')
 }
 
-function createAdminClient() {
+async function createAdminClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceRoleKey) return null
   // Import dynamically to avoid bundling issues
-  const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+  const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     serviceRoleKey

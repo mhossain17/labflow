@@ -1,43 +1,52 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { StudentRunSnapshot } from '@/features/monitoring/realtime'
+import type { EscalatedHelpRequest } from '@/types/app'
+import type { LabStepSummary } from './StudentDetailSheet'
 import { MonitorGrid } from './MonitorGrid'
 import { MonitorStats } from './MonitorStats'
 import { HelpRequestPanel } from './HelpRequestPanel'
+import { StudentDetailSheet } from './StudentDetailSheet'
+import { ClassDataOverview } from './ClassDataOverview'
 import { Badge } from '@/components/ui/badge'
-import { Radio } from 'lucide-react'
+import { Radio, ChevronDown } from 'lucide-react'
 
-interface EscalatedHelpRequest {
+interface AssignmentSummary {
   id: string
-  lab_run_id: string
-  student_id: string
-  first_name: string
-  last_name: string
-  conversation: Array<{ role: 'user' | 'assistant'; content: string; ts: string }>
-  step_id: string | null
-  resolved: boolean
-  escalated_to_teacher: boolean
-  created_at: string
+  classId: string
+  className: string
+  classPeriod: string | null
 }
 
 interface MonitorDashboardProps {
   labId: string
   labTitle: string
   assignmentId: string
+  selectedClassId: string
+  assignments: AssignmentSummary[]
   totalSteps: number
+  labSteps: LabStepSummary[]
   initialRuns: StudentRunSnapshot[]
   initialEscalatedHelp: EscalatedHelpRequest[]
 }
 
+type Tab = 'live' | 'data'
+
 export function MonitorDashboard({
+  labId,
   labTitle,
   assignmentId,
+  selectedClassId,
+  assignments,
   totalSteps,
+  labSteps,
   initialRuns,
   initialEscalatedHelp,
 }: MonitorDashboardProps) {
+  const router = useRouter()
   const [runs, setRuns] = useState<Map<string, StudentRunSnapshot>>(() => {
     const map = new Map<string, StudentRunSnapshot>()
     initialRuns.forEach(r => map.set(r.student_id, r))
@@ -48,21 +57,18 @@ export function MonitorDashboard({
   const [selectedHelp, setSelectedHelp] = useState<EscalatedHelpRequest | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [newEscalationAlert, setNewEscalationAlert] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<Tab>('live')
+  const [selectedRun, setSelectedRun] = useState<StudentRunSnapshot | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
 
-    // Subscribe to student_lab_runs updates
     const runsChannel = supabase
       .channel(`monitor:assignment:${assignmentId}`)
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'student_lab_runs',
-          filter: `assignment_id=eq.${assignmentId}`
-        },
+        { event: 'UPDATE', schema: 'public', table: 'student_lab_runs', filter: `assignment_id=eq.${assignmentId}` },
         (payload) => {
           setRuns(prev => {
             const next = new Map(prev)
@@ -82,24 +88,15 @@ export function MonitorDashboard({
           })
         }
       )
-      .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED')
-      })
+      .subscribe((status) => setIsConnected(status === 'SUBSCRIBED'))
 
-    // Subscribe to help_requests updates for escalation alerts
     const helpChannel = supabase
       .channel(`monitor:help:${assignmentId}`)
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'help_requests',
-        },
+        { event: 'UPDATE', schema: 'public', table: 'help_requests' },
         (payload) => {
           if (payload.new.escalated_to_teacher && !payload.new.resolved) {
-            // New escalation – we can't easily filter by assignment here without join,
-            // so just trigger a banner; the state will be refreshed on next server action
             setNewEscalationAlert('A student has escalated a help request!')
             setTimeout(() => setNewEscalationAlert(null), 5000)
           }
@@ -133,15 +130,37 @@ export function MonitorDashboard({
     setSelectedHelp(null)
   }
 
+  function handleStudentClick(run: StudentRunSnapshot) {
+    setSelectedRun(run)
+    setDetailOpen(true)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1">
           <h1 className="text-2xl font-bold">{labTitle}</h1>
           <p className="text-sm text-muted-foreground">Live Class Monitor</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Class selector */}
+          {assignments.length > 1 && (
+            <div className="relative">
+              <select
+                value={selectedClassId}
+                onChange={e => router.push(`/teacher/labs/${labId}/monitor?classId=${e.target.value}`)}
+                className="appearance-none rounded-lg border border-border bg-background pl-3 pr-8 py-1.5 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              >
+                {assignments.map(a => (
+                  <option key={a.classId} value={a.classId}>
+                    {a.className}{a.classPeriod ? ` (${a.classPeriod})` : ''}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            </div>
+          )}
           {isConnected ? (
             <Badge className="gap-1.5 bg-green-500/10 text-green-700 border-green-200 dark:text-green-400">
               <Radio className="size-3 animate-pulse" />
@@ -186,8 +205,40 @@ export function MonitorDashboard({
       {/* Stats */}
       <MonitorStats runs={runsList} totalSteps={totalSteps} />
 
-      {/* Grid */}
-      <MonitorGrid runs={runsList} totalSteps={totalSteps} />
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-border">
+        {([
+          { key: 'live', label: 'Live Monitor' },
+          { key: 'data', label: 'Class Data' },
+        ] as { key: Tab; label: string }[]).map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === tab.key
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'live' ? (
+        <MonitorGrid runs={runsList} totalSteps={totalSteps} onStudentClick={handleStudentClick} />
+      ) : (
+        <ClassDataOverview assignmentId={assignmentId} labSteps={labSteps} runs={runsList} />
+      )}
+
+      {/* Student detail sheet */}
+      <StudentDetailSheet
+        runId={selectedRun?.id ?? null}
+        studentName={selectedRun ? `${selectedRun.first_name} ${selectedRun.last_name}` : ''}
+        labSteps={labSteps}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
 
       {/* Help Request Sheet */}
       {selectedHelp && (

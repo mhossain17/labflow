@@ -103,7 +103,7 @@ export function LabBuilderForm({ lab }: LabBuilderFormProps) {
   const form = useForm<LabBuilderFormValues>({
     defaultValues: toFormValues(lab),
   })
-  const { register, control, watch, getValues } = form
+  const { register, control, watch, getValues, setValue } = form
 
   // ── Auto-save ────────────────────────────────────────────────────────────
 
@@ -324,7 +324,7 @@ export function LabBuilderForm({ lab }: LabBuilderFormProps) {
                   Add steps students will follow. Drag to reorder.
                 </p>
               </div>
-              <StepList control={control} register={register} watch={watch} />
+              <StepList control={control} register={register} watch={watch} setValue={setValue} />
             </div>
           </TabsContent>
 

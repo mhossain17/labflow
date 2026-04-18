@@ -20,7 +20,8 @@
       "Bash(supabase db *)",
       "Bash(node supabase/seed-all.mjs)",
       "Bash(pkill -f \"supabase db diff\")",
-      "Bash(node supabase/seed-demo.mjs)"
+      "Bash(node supabase/seed-demo.mjs)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp"
     ]
   }
 }

@@ -59,14 +59,14 @@ export async function enrollStudent(classId: string, studentId: string) {
   const db = supabase as any
   // Check not already enrolled
   const { data: existing } = await db
-    .from('enrollments')
+    .from('class_enrollments')
     .select('id')
     .eq('class_id', classId)
     .eq('student_id', studentId)
     .maybeSingle()
   if (existing) return { already: true }
   const { error } = await db
-    .from('enrollments')
+    .from('class_enrollments')
     .insert({ class_id: classId, student_id: studentId })
   if (error) throw error
   revalidatePath(`/teacher/classes/${classId}`)
@@ -77,7 +77,7 @@ export async function unenrollStudent(classId: string, studentId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
-    .from('enrollments')
+    .from('class_enrollments')
     .delete()
     .eq('class_id', classId)
     .eq('student_id', studentId)

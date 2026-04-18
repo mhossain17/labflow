@@ -1,9 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function db() {
-  const supabase = await createClient()
-  return supabase as any
+  return createClient()
 }
 
 export async function getLabRun(labRunId: string) {

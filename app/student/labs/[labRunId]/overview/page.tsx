@@ -21,29 +21,30 @@ export default async function LabOverviewPage({ params }: Props) {
 
   const run = await getLabRunWithSteps(labRunId)
   if (!run) notFound()
+  const labRun = run
 
-  const lab = run.labs as Lab & { lab_steps?: { id: string }[] }
+  const lab = labRun.labs as Lab & { lab_steps?: { id: string }[] }
   const totalSteps = lab.lab_steps?.length ?? 0
 
   function getContinueHref(): string {
-    if (!run.prelab_completed) {
+    if (!labRun.prelab_completed) {
       return `/student/labs/${labRunId}/prelab`
     }
-    const step = run.current_step > 0 ? run.current_step : 1
+    const step = labRun.current_step > 0 ? labRun.current_step : 1
     return `/student/labs/${labRunId}/step/${step}`
   }
 
   function getContinueLabel(): string {
-    if (!run.prelab_completed) return 'Start Pre-Lab'
-    if (run.current_step === 0) return 'Go to Step 1'
-    if (run.completed_at) return 'View Completion'
-    return `Continue at Step ${run.current_step}`
+    if (!labRun.prelab_completed) return 'Start Pre-Lab'
+    if (labRun.current_step === 0) return 'Go to Step 1'
+    if (labRun.completed_at) return 'View Completion'
+    return `Continue at Step ${labRun.current_step}`
   }
 
-  const continueHref = run.completed_at
+  const continueHref = labRun.completed_at
     ? `/student/labs/${labRunId}/complete`
     : getContinueHref()
-  const continueLabel = run.completed_at ? 'View Completion' : getContinueLabel()
+  const continueLabel = labRun.completed_at ? 'View Completion' : getContinueLabel()
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4 space-y-8">

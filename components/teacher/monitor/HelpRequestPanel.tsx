@@ -12,25 +12,7 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { resolveHelpRequest } from '@/features/lab-runner/actions'
-
-interface ConversationTurn {
-  role: 'user' | 'assistant'
-  content: string
-  ts: string
-}
-
-interface EscalatedHelpRequest {
-  id: string
-  lab_run_id: string
-  student_id: string
-  first_name: string
-  last_name: string
-  conversation: ConversationTurn[]
-  step_id: string | null
-  resolved: boolean
-  escalated_to_teacher: boolean
-  created_at: string
-}
+import type { EscalatedHelpRequest } from '@/types/app'
 
 interface HelpRequestPanelProps {
   helpRequest: EscalatedHelpRequest

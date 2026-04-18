@@ -2,7 +2,7 @@ import { getProfile } from '@/lib/auth/session'
 import { getLabRunWithSteps } from '@/features/lab-runner/queries'
 import { redirect } from 'next/navigation'
 import { StatusSidebar } from '@/components/student/sidebar/StatusSidebar'
-import type { LabStep } from '@/types/app'
+import { normalizeAndSortLabSteps } from '@/lib/labs/steps'
 
 interface Props {
   children: React.ReactNode
@@ -15,9 +15,7 @@ export default async function LabRunLayout({ children, params }: Props) {
   if (!profile) redirect('/login')
 
   const run = await getLabRunWithSteps(labRunId)
-  const steps: LabStep[] = (run?.labs?.lab_steps ?? []).sort(
-    (a: LabStep, b: LabStep) => a.step_number - b.step_number
-  )
+  const steps = normalizeAndSortLabSteps(run?.labs?.lab_steps)
   const totalSteps = steps.length
   const currentStep = run?.current_step ?? 0
 

@@ -9,7 +9,7 @@ interface ClassListProps {
     period: string | null
     school_year: string | null
     description: string | null
-    enrollments: Array<unknown> | { count: number } | null
+    class_enrollments: Array<unknown> | { count: number } | null
     lab_assignments: Array<unknown> | { count: number } | null
   }>
 }

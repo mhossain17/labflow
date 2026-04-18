@@ -9,14 +9,14 @@ export default async function Home() {
 
   const role = user.app_metadata?.role as string | undefined
 
-  if (role === 'teacher' || role === 'school_admin' || role === 'super_admin') {
+  if (role === 'teacher') {
+    redirect('/teacher/classes')
+  }
+  if (role === 'school_admin' || role === 'super_admin') {
     redirect('/teacher/classes')
   }
   if (role === 'student') {
     redirect('/student/labs')
-  }
-  if (role === 'school_admin') {
-    redirect('/admin/branding')
   }
 
   redirect('/dashboard')

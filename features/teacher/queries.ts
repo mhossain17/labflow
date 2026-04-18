@@ -6,7 +6,7 @@ export async function listClassesByTeacher(teacherId: string) {
   const db = supabase as any
   const { data } = await db
     .from('classes')
-    .select('*, enrollments(count), lab_assignments(count)')
+    .select('*, class_enrollments(count), lab_assignments(count)')
     .eq('teacher_id', teacherId)
     .eq('archived', false)
     .order('created_at', { ascending: false })
@@ -19,7 +19,7 @@ export async function getClassWithEnrollments(classId: string) {
   const db = supabase as any
   const { data } = await db
     .from('classes')
-    .select('*, enrollments(*, profiles(id, first_name, last_name, avatar_url))')
+    .select('*, class_enrollments(*, profiles(id, first_name, last_name, avatar_url))')
     .eq('id', classId)
     .single()
   return data
@@ -57,7 +57,7 @@ export async function getLabAssignments(labId: string) {
     .from('lab_assignments')
     .select('*, classes(id, name, period)')
     .eq('lab_id', labId)
-    .order('assigned_at', { ascending: false })
+    .order('created_at', { ascending: false })
   return data ?? []
 }
 
@@ -100,6 +100,6 @@ export async function getClassLabAssignments(classId: string) {
     .from('lab_assignments')
     .select('*, labs(id, title, status, estimated_minutes)')
     .eq('class_id', classId)
-    .order('assigned_at', { ascending: false })
+    .order('created_at', { ascending: false })
   return data ?? []
 }

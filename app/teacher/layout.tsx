@@ -23,7 +23,7 @@ export default async function TeacherLayout({ children }: { children: React.Reac
       <div className="min-h-screen flex flex-col bg-background">
         <TopNav />
         <div className="flex flex-1 overflow-hidden">
-          <TeacherSidebar />
+          <TeacherSidebar role={profile?.role} />
           <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>

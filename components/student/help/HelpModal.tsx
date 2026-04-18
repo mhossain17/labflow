@@ -1,6 +1,5 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { Dialog } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { TroubleshootingGuide } from './TroubleshootingGuide'
 import { HelpChat } from './HelpChat'

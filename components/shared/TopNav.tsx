@@ -44,7 +44,7 @@ export async function TopNav() {
       {/* Left: org logo or name */}
       <div className="flex items-center gap-3">
         {org?.logo_url ? (
-          <Link href="/dashboard" className="flex items-center">
+          <Link href="/teacher/classes" className="flex items-center gap-2">
             <Image
               src={org.logo_url}
               alt={org.name}
@@ -52,10 +52,11 @@ export async function TopNav() {
               height={32}
               className="h-8 w-auto object-contain"
             />
+            <span className="font-bold text-primary text-lg">LabFlow</span>
           </Link>
         ) : (
-          <Link href="/dashboard" className="font-bold text-primary text-lg">
-            {org?.name ?? 'LabFlow'}
+          <Link href="/teacher/classes" className="flex items-center gap-2">
+            <span className="font-bold text-primary text-lg">LabFlow</span>
           </Link>
         )}
       </div>
@@ -67,6 +68,7 @@ export async function TopNav() {
           email={user.email ?? ''}
           initials={initials}
           avatarUrl={profile?.avatar_url}
+          role={profile?.role}
         />
       )}
     </header>

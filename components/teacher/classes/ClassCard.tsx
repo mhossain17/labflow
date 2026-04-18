@@ -10,19 +10,23 @@ interface ClassCardProps {
     period: string | null
     school_year: string | null
     description: string | null
-    enrollments: Array<unknown> | { count: number } | null
+    class_enrollments: Array<unknown> | { count: number } | null
     lab_assignments: Array<unknown> | { count: number } | null
   }
 }
 
 function getCount(val: Array<unknown> | { count: number } | null): number {
   if (!val) return 0
-  if (Array.isArray(val)) return val.length
+  if (Array.isArray(val)) {
+    const first = val[0] as { count?: number | string } | undefined
+    if (first && typeof first.count !== 'undefined') return Number(first.count)
+    return val.length
+  }
   return val.count ?? 0
 }
 
 export function ClassCard({ cls }: ClassCardProps) {
-  const studentCount = getCount(cls.enrollments)
+  const studentCount = getCount(cls.class_enrollments)
   const labCount = getCount(cls.lab_assignments)
 
   return (

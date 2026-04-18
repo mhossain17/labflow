@@ -1,21 +1,37 @@
 import { createClient } from '@/lib/supabase/server'
+import type { EscalatedHelpRequest, HelpConversationTurn } from '@/types/app'
+import type { Json } from '@/types/database'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function db() {
-  const supabase = await createClient()
-  return supabase as any
+  return createClient()
 }
 
-export async function getLabAssignmentForMonitor(labId: string) {
+function parseConversation(value: Json): HelpConversationTurn[] {
+  if (!Array.isArray(value)) return []
+
+  const turns: HelpConversationTurn[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue
+    const role = item.role
+    const content = item.content
+    const ts = item.ts
+
+    if (role !== 'user' && role !== 'assistant') continue
+    if (typeof content !== 'string' || typeof ts !== 'string') continue
+
+    turns.push({ role, content, ts })
+  }
+  return turns
+}
+
+export async function getLabAssignmentsForMonitor(labId: string) {
   const client = await db()
   const { data } = await client
     .from('lab_assignments')
     .select('*, classes(id, name, period)')
     .eq('lab_id', labId)
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  return data
+  return data ?? []
 }
 
 export async function getStudentRunsForMonitor(assignmentId: string) {
@@ -30,7 +46,7 @@ export async function getStudentRunsForMonitor(assignmentId: string) {
 
   // Get flag counts per run
   const runIds: string[] = runs.map((r: { id: string }) => r.id)
-  let flagCounts: Record<string, number> = {}
+  const flagCounts: Record<string, number> = {}
 
   if (runIds.length > 0) {
     const { data: responses } = await client
@@ -99,13 +115,19 @@ export async function getEscalatedHelpRequests(assignmentId: string) {
     ])
   )
 
-  return helpRequests.map((hr: { id: string; lab_run_id: string; [key: string]: unknown }) => {
+  return helpRequests.map((hr): EscalatedHelpRequest => {
     const studentInfo = runMap.get(hr.lab_run_id)
     return {
-      ...hr,
-      student_id: studentInfo?.student_id ?? '',
+      id: hr.id,
+      lab_run_id: hr.lab_run_id,
+      student_id: studentInfo?.student_id ?? hr.student_id,
       first_name: studentInfo?.first_name ?? '',
       last_name: studentInfo?.last_name ?? '',
+      conversation: parseConversation(hr.conversation),
+      step_id: hr.step_id,
+      resolved: hr.resolved,
+      escalated_to_teacher: hr.escalated_to_teacher,
+      created_at: hr.created_at,
     }
   })
 }

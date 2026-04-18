@@ -21,7 +21,7 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
 
   if (!cls) notFound()
 
-  const enrollments = cls.enrollments ?? []
+  const enrollments = cls.class_enrollments ?? []
 
   return (
     <div className="space-y-8">

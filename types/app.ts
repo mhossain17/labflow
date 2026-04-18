@@ -1,5 +1,3 @@
-import type { Database } from './database'
-
 export type UserRole = 'teacher' | 'student' | 'school_admin' | 'super_admin'
 export type ThemePreference = 'light' | 'dark' | 'system'
 export type LabStatus = 'draft' | 'published' | 'archived'
@@ -128,6 +126,9 @@ export type DataFlag = {
   message: string
 }
 
+export type StepDataValue = string | number | boolean | null
+export type StepDataValues = Record<string, StepDataValue>
+
 export type FeatureFlags = {
   ai_lab_generation: boolean
   help_chat: boolean
@@ -140,5 +141,15 @@ export type HelpConversationTurn = {
   ts: string
 }
 
-// Suppress unused import warning — Database type used by supabase client generics
-type _Database = Database
+export type EscalatedHelpRequest = {
+  id: string
+  lab_run_id: string
+  student_id: string
+  first_name: string
+  last_name: string
+  conversation: HelpConversationTurn[]
+  step_id: string | null
+  resolved: boolean
+  escalated_to_teacher: boolean
+  created_at: string
+}

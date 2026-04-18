@@ -1,5 +1,5 @@
 'use client'
-import { useFieldArray, Control, UseFormRegister, UseFormWatch } from 'react-hook-form'
+import { useFieldArray, Control, UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,9 +13,11 @@ interface DataFieldEditorProps {
   control: Control<LabBuilderFormValues, any>
   register: UseFormRegister<LabBuilderFormValues>
   watch: UseFormWatch<LabBuilderFormValues>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue: UseFormSetValue<LabBuilderFormValues>
 }
 
-export function DataFieldEditor({ stepIndex, control, register, watch }: DataFieldEditorProps) {
+export function DataFieldEditor({ stepIndex, control, register, watch, setValue }: DataFieldEditorProps) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: `steps.${stepIndex}.data_entry_fields`,
@@ -107,11 +109,9 @@ export function DataFieldEditor({ stepIndex, control, register, watch }: DataFie
               <Switch
                 id={`field-required-${stepIndex}-${fieldIdx}`}
                 checked={watch(`steps.${stepIndex}.data_entry_fields.${fieldIdx}.required`)}
-                onCheckedChange={(checked) => {
-                  // handled by Controller in parent or direct setValue
-                  void checked
-                }}
-                {...register(`steps.${stepIndex}.data_entry_fields.${fieldIdx}.required`)}
+                onCheckedChange={(checked) =>
+                  setValue(`steps.${stepIndex}.data_entry_fields.${fieldIdx}.required`, checked)
+                }
               />
               <Label htmlFor={`field-required-${stepIndex}-${fieldIdx}`} className="text-xs">Required</Label>
             </div>

@@ -9,7 +9,7 @@ import { submitLab } from '@/features/lab-runner/actions'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { CheckCircle2, Clock, ArrowLeft } from 'lucide-react'
-import type { LabStep } from '@/types/app'
+import { normalizeAndSortLabSteps } from '@/lib/labs/steps'
 
 interface Props {
   params: Promise<{ labRunId: string }>
@@ -26,9 +26,7 @@ export default async function CompletePage({ params }: Props) {
   const run = await getLabRunWithSteps(labRunId)
   if (!run) notFound()
 
-  const steps: LabStep[] = (run.labs?.lab_steps ?? []).sort(
-    (a: LabStep, b: LabStep) => a.step_number - b.step_number
-  )
+  const steps = normalizeAndSortLabSteps(run.labs?.lab_steps)
 
   const stepResponses = await getStepResponses(labRunId)
   const completedStepIds = new Set(

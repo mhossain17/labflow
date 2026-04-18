@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useFieldArray, Control, UseFormRegister, UseFormWatch } from 'react-hook-form'
+import { useFieldArray, Control, UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form'
 import {
   DndContext,
   closestCenter,
@@ -32,6 +32,8 @@ interface StepItemProps {
   control: Control<LabBuilderFormValues, any>
   register: UseFormRegister<LabBuilderFormValues>
   watch: UseFormWatch<LabBuilderFormValues>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue: UseFormSetValue<LabBuilderFormValues>
   onRemove: () => void
 }
 
@@ -43,6 +45,7 @@ function SortableStepItem({
   control,
   register,
   watch,
+  setValue,
   onRemove,
 }: StepItemProps) {
   const [expanded, setExpanded] = useState(stepIndex === 0)
@@ -107,6 +110,7 @@ function SortableStepItem({
             control={control}
             register={register}
             watch={watch}
+            setValue={setValue}
           />
         </div>
       )}
@@ -119,9 +123,11 @@ interface StepListProps {
   control: Control<LabBuilderFormValues, any>
   register: UseFormRegister<LabBuilderFormValues>
   watch: UseFormWatch<LabBuilderFormValues>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue: UseFormSetValue<LabBuilderFormValues>
 }
 
-export function StepList({ control, register, watch }: StepListProps) {
+export function StepList({ control, register, watch, setValue }: StepListProps) {
   const { fields, append, remove, move } = useFieldArray({
     control,
     name: 'steps',
@@ -166,6 +172,7 @@ export function StepList({ control, register, watch }: StepListProps) {
                 control={control}
                 register={register}
                 watch={watch}
+                setValue={setValue}
                 onRemove={() => remove(index)}
               />
             )

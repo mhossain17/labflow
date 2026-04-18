@@ -23,9 +23,10 @@ const STATUS_BAR_COLOR: Record<string, string> = {
 interface StudentCardProps {
   run: StudentRunSnapshot
   totalSteps: number
+  onClick?: () => void
 }
 
-export function StudentCard({ run, totalSteps }: StudentCardProps) {
+export function StudentCard({ run, totalSteps, onClick }: StudentCardProps) {
   const status = STATUS_CONFIG[run.status] ?? { label: run.status, className: 'bg-muted text-muted-foreground border-muted' }
   const barColor = STATUS_BAR_COLOR[run.status] ?? 'bg-muted-foreground'
 
@@ -39,7 +40,7 @@ export function StudentCard({ run, totalSteps }: StudentCardProps) {
   }
 
   return (
-    <Card size="sm" className="transition-shadow hover:shadow-md">
+    <Card size="sm" onClick={onClick} className={`transition-shadow hover:shadow-md ${onClick ? 'cursor-pointer' : ''}`}>
       <CardHeader className="border-b pb-3">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-sm leading-tight">

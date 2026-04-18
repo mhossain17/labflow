@@ -1,12 +1,34 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { StudentWorkStatus, DataFlag, HelpConversationTurn } from '@/types/app'
+import type {
+  StudentWorkStatus,
+  DataFlag,
+  HelpConversationTurn,
+  StepDataValues,
+} from '@/types/app'
+import type { Json } from '@/types/database'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function db() {
-  const supabase = await createClient()
-  return supabase as any
+  return createClient()
+}
+
+function normalizeConversation(value: Json | null): HelpConversationTurn[] {
+  if (!Array.isArray(value)) return []
+
+  const turns: HelpConversationTurn[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue
+    const role = item.role
+    const content = item.content
+    const ts = item.ts
+
+    if (role !== 'user' && role !== 'assistant') continue
+    if (typeof content !== 'string' || typeof ts !== 'string') continue
+
+    turns.push({ role, content, ts })
+  }
+  return turns
 }
 
 export async function createLabRun(
@@ -111,7 +133,7 @@ export async function saveStepResponse(
   labRunId: string,
   stepId: string,
   studentId: string,
-  dataValues: Record<string, unknown>,
+  dataValues: StepDataValues,
   reflectionText: string,
   flags: DataFlag[]
 ) {
@@ -210,7 +232,7 @@ export async function addHelpConversationTurn(
     content,
     ts: new Date().toISOString(),
   }
-  const updated = [...(existing?.conversation ?? []), turn]
+  const updated = [...normalizeConversation(existing?.conversation ?? null), turn]
 
   const { error } = await client
     .from('help_requests')

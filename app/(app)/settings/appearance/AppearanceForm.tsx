@@ -1,6 +1,5 @@
 'use client'
 import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
 import { Label } from '@/components/ui/label'
 
 const themes = [
@@ -11,14 +10,9 @@ const themes = [
 
 export function AppearanceForm() {
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const isThemeReady = typeof theme === 'string'
 
-  // Avoid hydration mismatch
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
+  if (!isThemeReady) {
     return (
       <div className="flex flex-col gap-3">
         <Label>Theme</Label>

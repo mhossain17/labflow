@@ -2,13 +2,14 @@
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { updateUserRole } from '@/features/admin/actions'
+import type { UserRole } from '@/types/app'
 
 interface User {
   id: string
   first_name: string
   last_name: string
   email: string | null
-  role: string
+  role: UserRole
 }
 
 interface UserTableProps {
@@ -17,7 +18,9 @@ interface UserTableProps {
 }
 
 const ROLES = ['teacher', 'student', 'school_admin', 'super_admin'] as const
-const ROLE_LABELS: Record<string, string> = {
+type RoleOption = (typeof ROLES)[number]
+
+const ROLE_LABELS: Record<RoleOption, string> = {
   teacher: 'Teacher',
   student: 'Student',
   school_admin: 'School Admin',
@@ -30,14 +33,15 @@ function RoleSelect({
   disabled,
 }: {
   userId: string
-  currentRole: string
+  currentRole: RoleOption
   disabled: boolean
 }) {
   const [role, setRole] = useState(currentRole)
   const [isPending, startTransition] = useTransition()
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newRole = e.target.value
+    const newRole = e.target.value as RoleOption
+    if (!ROLES.includes(newRole)) return
     const previousRole = role
     setRole(newRole)
 

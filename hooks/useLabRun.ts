@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react'
 import { useAutoSave } from './useAutoSave'
 import { validateDataEntry } from '@/lib/validations/data-flagging'
-import type { DataEntryField, DataFlag } from '@/types/app'
+import type { DataEntryField, DataFlag, StepDataValue, StepDataValues } from '@/types/app'
 import { saveStepResponse } from '@/features/lab-runner/actions'
 
 export function useLabRun({
@@ -16,7 +16,7 @@ export function useLabRun({
   labRunId: string
   stepId: string
   studentId: string
-  initialDataValues: Record<string, unknown>
+  initialDataValues: StepDataValues
   initialReflection: string
   fields: DataEntryField[]
 }) {
@@ -26,7 +26,7 @@ export function useLabRun({
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
   const performSave = useCallback(
-    async (values: Record<string, unknown>, ref: string) => {
+    async (values: StepDataValues, ref: string) => {
       setSaveStatus('saving')
       try {
         const newFlags = validateDataEntry(fields, values)
@@ -41,11 +41,11 @@ export function useLabRun({
   )
 
   const { save } = useAutoSave(
-    ({ values, ref }: { values: Record<string, unknown>; ref: string }) =>
+    ({ values, ref }: { values: StepDataValues; ref: string }) =>
       performSave(values, ref)
   )
 
-  const updateField = (label: string, value: unknown) => {
+  const updateField = (label: string, value: StepDataValue) => {
     const newValues = { ...dataValues, [label]: value }
     setDataValues(newValues)
     save({ values: newValues, ref: reflection })

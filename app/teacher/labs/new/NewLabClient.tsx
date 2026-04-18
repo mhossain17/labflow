@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { AIGenerateModal } from '@/components/teacher/lab-builder/AIGenerateModal'
 import { createLab } from '@/features/lab-builder/actions'

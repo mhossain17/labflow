@@ -15,7 +15,12 @@ import {
   CheckCircle2,
   Info,
 } from 'lucide-react'
-import type { LabStep, DataEntryField as DataEntryFieldType, DataFlag } from '@/types/app'
+import type {
+  LabStep,
+  DataEntryField as DataEntryFieldType,
+  DataFlag,
+  StepDataValues,
+} from '@/types/app'
 
 interface Props {
   labRunId: string
@@ -23,7 +28,7 @@ interface Props {
   step: LabStep
   stepNumber: number
   totalSteps: number
-  initialDataValues: Record<string, unknown>
+  initialDataValues: StepDataValues
   initialReflection: string
   initialFlags: DataFlag[]
 }

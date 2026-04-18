@@ -1,5 +1,4 @@
 'use client'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -11,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Settings, Palette, LogOut } from 'lucide-react'
+import { Settings, Palette, LogOut, ShieldCheck } from 'lucide-react'
 import { signOut } from '@/lib/auth/actions'
 
 interface TopNavUserMenuProps {
@@ -19,10 +18,12 @@ interface TopNavUserMenuProps {
   email: string
   initials: string
   avatarUrl?: string | null
+  role?: string
 }
 
-export function TopNavUserMenu({ fullName, email, initials, avatarUrl }: TopNavUserMenuProps) {
+export function TopNavUserMenu({ fullName, email, initials, avatarUrl, role }: TopNavUserMenuProps) {
   const router = useRouter()
+  const isAdmin = role === 'school_admin' || role === 'super_admin'
 
   return (
     <DropdownMenu>
@@ -42,16 +43,25 @@ export function TopNavUserMenu({ fullName, email, initials, avatarUrl }: TopNavU
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        {isAdmin && (
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => router.push('/admin/branding')}
+          >
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            Admin Panel
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           className="cursor-pointer"
-          onSelect={() => router.push('/settings/account')}
+          onClick={() => router.push('/settings/account')}
         >
           <Settings className="mr-2 h-4 w-4" />
           Account Settings
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
-          onSelect={() => router.push('/settings/appearance')}
+          onClick={() => router.push('/settings/appearance')}
         >
           <Palette className="mr-2 h-4 w-4" />
           Appearance

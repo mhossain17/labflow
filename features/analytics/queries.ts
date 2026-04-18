@@ -1,9 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function db() {
-  const supabase = await createClient()
-  return supabase as any
+  return createClient()
 }
 
 export async function getLabAnalyticsSummary(labId: string) {
@@ -69,7 +67,7 @@ export async function getStuckStepData(labId: string) {
     .eq('lab_id', labId)
 
   const runIds = (runs ?? []).map((r: { id: string }) => r.id)
-  let helpByStep: Record<string, number> = {}
+  const helpByStep: Record<string, number> = {}
 
   if (runIds.length > 0 && steps && steps.length > 0) {
     const { data: helpRequests } = await client
