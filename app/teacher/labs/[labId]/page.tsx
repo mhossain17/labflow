@@ -15,6 +15,7 @@ import {
   BookOpen,
   Calendar,
   X,
+  GraduationCap,
 } from 'lucide-react'
 import type { LabStatus } from '@/types/app'
 import { unassignLab } from '@/features/teacher/actions'
@@ -67,6 +68,12 @@ export default async function LabDetailPage({ params }: LabDetailPageProps) {
               <Button size="sm" render={<Link href={`/teacher/labs/${labId}/monitor`} />}>
                 <Monitor className="size-4" />
                 Monitor
+              </Button>
+            )}
+            {lab.status === 'published' && (
+              <Button variant="outline" size="sm" render={<Link href={`/teacher/labs/${labId}/grade`} />}>
+                <GraduationCap className="size-4" />
+                Grade Submissions
               </Button>
             )}
           </div>

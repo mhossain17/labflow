@@ -119,6 +119,49 @@ export async function assignLabToClass(
   revalidatePath(`/teacher/classes/${classId}`)
 }
 
+export async function saveStudentGrade(
+  labRunId: string,
+  teacherId: string,
+  rubricScores: Array<{ rubricItemId: string; teacherScore: number; teacherComment?: string }>,
+  overall: { letterGrade?: string; overallComment?: string; totalScore: number; maxScore: number }
+) {
+  const supabase = await createClient()
+  const db = supabase as any
+
+  if (rubricScores.length > 0) {
+    await Promise.all(
+      rubricScores.map((s) =>
+        db.from('rubric_scores').upsert(
+          {
+            lab_run_id: labRunId,
+            rubric_item_id: s.rubricItemId,
+            teacher_score: s.teacherScore,
+            teacher_comment: s.teacherComment ?? null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'lab_run_id,rubric_item_id' }
+        )
+      )
+    )
+  }
+
+  const { error } = await db.from('student_grades').upsert(
+    {
+      lab_run_id: labRunId,
+      teacher_id: teacherId,
+      total_score: overall.totalScore,
+      max_score: overall.maxScore,
+      letter_grade: overall.letterGrade ?? null,
+      overall_comment: overall.overallComment ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'lab_run_id' }
+  )
+  if (error) throw error
+
+  revalidatePath(`/teacher/labs`)
+}
+
 export async function unassignLab(labId: string, classId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

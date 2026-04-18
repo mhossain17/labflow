@@ -349,3 +349,26 @@ export async function reorderLabSteps(labId: string, orderedIds: string[]) {
   )
   revalidatePath(`/teacher/labs/${labId}/edit`)
 }
+
+export async function saveRubricItems(
+  labId: string,
+  items: Array<{ title: string; description?: string; max_points: number; position: number }>
+) {
+  const supabase = await createClient()
+  const db = supabase as any
+  const { error: delError } = await db.from('rubric_items').delete().eq('lab_id', labId)
+  if (delError) throw delError
+  if (items.length > 0) {
+    const { error: insError } = await db.from('rubric_items').insert(
+      items.map((item, i) => ({
+        lab_id: labId,
+        title: item.title,
+        description: item.description ?? null,
+        max_points: item.max_points,
+        position: i,
+      }))
+    )
+    if (insError) throw insError
+  }
+  revalidatePath(`/teacher/labs/${labId}/edit`)
+}

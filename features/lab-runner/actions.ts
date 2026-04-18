@@ -258,3 +258,30 @@ export async function escalateHelpRequest(helpRequestId: string) {
     .eq('id', helpRequestId)
   if (error) throw error
 }
+
+export async function startLabRun(assignmentId: string, labId: string, studentId: string) {
+  const run = await createLabRun(assignmentId, studentId, labId)
+  revalidatePath('/student')
+  return run.id
+}
+
+export async function saveSelfAssessment(
+  labRunId: string,
+  scores: Array<{ rubricItemId: string; selfScore: number }>
+) {
+  const client = await db()
+  await Promise.all(
+    scores.map((s) =>
+      client.from('rubric_scores' as any).upsert(
+        {
+          lab_run_id: labRunId,
+          rubric_item_id: s.rubricItemId,
+          self_score: s.selfScore,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'lab_run_id,rubric_item_id' }
+      )
+    )
+  )
+  revalidatePath(`/student/labs/${labRunId}/complete`)
+}

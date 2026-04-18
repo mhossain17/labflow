@@ -3,6 +3,7 @@ import {
   checkLabRunOwnership,
   getLabRunWithSteps,
   getStepResponses,
+  getGradeForRun,
 } from '@/features/lab-runner/queries'
 import { notFound, redirect } from 'next/navigation'
 import { submitLab } from '@/features/lab-runner/actions'
@@ -10,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { CheckCircle2, Clock, ArrowLeft } from 'lucide-react'
 import { normalizeAndSortLabSteps } from '@/lib/labs/steps'
+import { getRubricItems } from '@/features/lab-builder/queries'
+import { SelfAssessment } from '@/components/student/lab-runner/SelfAssessment'
 
 interface Props {
   params: Promise<{ labRunId: string }>
@@ -28,7 +31,12 @@ export default async function CompletePage({ params }: Props) {
 
   const steps = normalizeAndSortLabSteps(run.labs?.lab_steps)
 
-  const stepResponses = await getStepResponses(labRunId)
+  const labId = (run.labs as any)?.id ?? run.lab_id
+  const [stepResponses, rubricItems, { grade, scores }] = await Promise.all([
+    getStepResponses(labRunId),
+    getRubricItems(labId),
+    getGradeForRun(labRunId),
+  ])
   const completedStepIds = new Set(
     stepResponses.filter((r: { completed: boolean }) => r.completed).map((r: { step_id: string }) => r.step_id)
   )
@@ -95,6 +103,15 @@ export default async function CompletePage({ params }: Props) {
               ))}
             </div>
           </section>
+
+          {rubricItems.length > 0 && (
+            <SelfAssessment
+              labRunId={labRunId}
+              rubricItems={rubricItems}
+              existingScores={scores}
+              teacherGrade={grade}
+            />
+          )}
 
           <div className="flex justify-center">
             <Button variant="outline" size="lg" render={<Link href="/student/labs" />}>

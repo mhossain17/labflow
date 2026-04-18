@@ -92,6 +92,66 @@ export async function listAllTeacherMaterials(teacherId: string) {
   return data ?? []
 }
 
+export async function getSubmissionsForGrading(labId: string) {
+  const supabase = await createClient()
+  const db = supabase as any
+
+  const { data: assignments } = await db
+    .from('lab_assignments')
+    .select(`
+      id, class_id,
+      classes(id, name, period),
+      student_lab_runs(
+        id, student_id, completed_at, status, started_at,
+        profiles:student_id(id, first_name, last_name),
+        student_grades(id, total_score, max_score, letter_grade, graded_at)
+      )
+    `)
+    .eq('lab_id', labId)
+
+  return (assignments ?? []).map((a: any) => ({
+    ...a,
+    student_lab_runs: (a.student_lab_runs ?? []).filter((r: any) => !!r.completed_at),
+  }))
+}
+
+export async function getGradingSheetData(labRunId: string) {
+  const supabase = await createClient()
+  const db = supabase as any
+
+  const [{ data: run }, { data: rubricScores }] = await Promise.all([
+    db.from('student_lab_runs')
+      .select(`
+        id, student_id, lab_id, completed_at,
+        profiles:student_id(id, first_name, last_name),
+        labs(id, title, lab_steps(*), pre_lab_questions(*)),
+        pre_lab_responses(*),
+        step_responses(*),
+        student_grades(*)
+      `)
+      .eq('id', labRunId)
+      .single(),
+    db.from('rubric_scores')
+      .select('*, rubric_items(*)')
+      .eq('lab_run_id', labRunId),
+  ])
+
+  if (!run) return null
+
+  const { data: rubricItems } = await db
+    .from('rubric_items')
+    .select('*')
+    .eq('lab_id', run.lab_id)
+    .order('position', { ascending: true })
+
+  return {
+    run,
+    rubricItems: rubricItems ?? [],
+    rubricScores: rubricScores ?? [],
+    existingGrade: run.student_grades?.[0] ?? null,
+  }
+}
+
 export async function getClassLabAssignments(classId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

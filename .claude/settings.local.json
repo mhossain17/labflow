@@ -21,7 +21,10 @@
       "Bash(node supabase/seed-all.mjs)",
       "Bash(pkill -f \"supabase db diff\")",
       "Bash(node supabase/seed-demo.mjs)",
-      "mcp__Claude_in_Chrome__tabs_context_mcp"
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(NODE_PATH=\"/Users/msh/LabFlow - Classroom Lab Manager/node_modules\" npx --prefix \"/Users/msh/LabFlow - Classroom Lab Manager\" tsc --noEmit)",
+      "Bash(ln -s \"/Users/msh/LabFlow - Classroom Lab Manager/node_modules\" node_modules)",
+      "Bash(rm node_modules)"
     ]
   }
 }

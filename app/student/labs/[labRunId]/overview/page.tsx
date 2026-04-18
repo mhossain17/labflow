@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { Lab } from '@/types/app'
+import { getRubricItems } from '@/features/lab-builder/queries'
 
 interface Props {
   params: Promise<{ labRunId: string }>
@@ -25,6 +26,7 @@ export default async function LabOverviewPage({ params }: Props) {
 
   const lab = labRun.labs as Lab & { lab_steps?: { id: string }[] }
   const totalSteps = lab.lab_steps?.length ?? 0
+  const rubricItems = await getRubricItems(lab.id)
 
   function getContinueHref(): string {
     if (!labRun.prelab_completed) {
@@ -56,7 +58,7 @@ export default async function LabOverviewPage({ params }: Props) {
         )}
       </div>
 
-      <LabOverview lab={lab} />
+      <LabOverview lab={lab} rubricItems={rubricItems} />
 
       <div className="flex justify-end">
         <Button size="lg" render={<Link href={continueHref} />}>

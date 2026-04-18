@@ -34,7 +34,9 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  ClipboardCheck,
 } from 'lucide-react'
+import { RubricEditor } from './RubricEditor'
 import Link from 'next/link'
 import type { LabWithSteps, LabStatus, DataEntryField } from '@/types/app'
 import { cn } from '@/lib/utils'
@@ -117,7 +119,8 @@ const WIZARD_STEPS = [
   { num: 3, label: 'Background', icon: BookOpen },
   { num: 4, label: 'Pre-Lab', icon: ClipboardList },
   { num: 5, label: 'Procedure', icon: FlaskConical },
-  { num: 6, label: 'Review & Publish', icon: Rocket },
+  { num: 6, label: 'Rubric', icon: ClipboardCheck },
+  { num: 7, label: 'Review & Publish', icon: Rocket },
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -125,9 +128,10 @@ const WIZARD_STEPS = [
 interface LabBuilderFormProps {
   lab: LabWithSteps
   initialStep?: number
+  initialRubricItems: Array<{ id?: string; title: string; description: string | null; max_points: number; position: number }>
 }
 
-export function LabBuilderForm({ lab, initialStep = 1 }: LabBuilderFormProps) {
+export function LabBuilderForm({ lab, initialStep = 1, initialRubricItems }: LabBuilderFormProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [autoSaveStatus, setAutoSaveStatus] = useState<SaveStatus>('idle')
@@ -585,8 +589,21 @@ export function LabBuilderForm({ lab, initialStep = 1 }: LabBuilderFormProps) {
           </div>
         )}
 
-        {/* Step 6 — Review & Publish */}
+        {/* Step 6 — Rubric */}
         {currentStep === 6 && (
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">Rubric</h2>
+            <RubricEditor labId={lab.id} initialItems={initialRubricItems.map(i => ({
+              id: i.id,
+              title: i.title,
+              description: i.description ?? '',
+              max_points: i.max_points,
+            }))} />
+          </div>
+        )}
+
+        {/* Step 7 — Review & Publish */}
+        {currentStep === 7 && (
           <ReviewAndPublishStep
             lab={lab}
             status={status}

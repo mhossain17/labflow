@@ -92,3 +92,63 @@ export async function checkLabRunOwnership(
     .maybeSingle()
   return !!data
 }
+
+export async function getStudentDashboardData(studentId: string) {
+  const client = await createClient()
+  const db = client as any
+
+  const { data: enrollments } = await db
+    .from('class_enrollments')
+    .select(`
+      class_id,
+      classes(
+        id, name, period, school_year, archived,
+        profiles:teacher_id(first_name, last_name),
+        lab_assignments(
+          id, due_date, lab_id,
+          labs(id, title, overview, estimated_minutes, status)
+        )
+      )
+    `)
+    .eq('student_id', studentId)
+
+  const { data: runs } = await db
+    .from('student_lab_runs')
+    .select('id, assignment_id, current_step, prelab_completed, status, completed_at, lab_id, labs(title, lab_steps(id))')
+    .eq('student_id', studentId)
+
+  const runsByAssignment = new Map<string, typeof runs[0]>()
+  for (const run of (runs ?? [])) {
+    if (run.assignment_id) runsByAssignment.set(run.assignment_id, run)
+  }
+
+  const classes = (enrollments ?? [])
+    .map((e: any) => e.classes)
+    .filter(Boolean)
+    .filter((c: any) => !c.archived)
+    .map((cls: any) => ({
+      ...cls,
+      lab_assignments: (cls.lab_assignments ?? [])
+        .filter((a: any) => a.labs?.status === 'published')
+        .map((a: any) => ({
+          ...a,
+          lab_run: runsByAssignment.get(a.id) ?? null,
+        })),
+    }))
+
+  return classes
+}
+
+export async function getGradeForRun(labRunId: string) {
+  const client = await createClient()
+  const db = client as any
+
+  const [{ data: grade }, { data: scores }] = await Promise.all([
+    db.from('student_grades').select('*').eq('lab_run_id', labRunId).maybeSingle(),
+    db.from('rubric_scores')
+      .select('*, rubric_items(id, title, description, max_points, position)')
+      .eq('lab_run_id', labRunId),
+  ])
+
+  return { grade: grade ?? null, scores: scores ?? [] }
+}
