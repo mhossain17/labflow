@@ -9,6 +9,7 @@ import { TeacherLabCreationSection } from './sections/TeacherLabCreationSection'
 import { StudentExperienceSection } from './sections/StudentExperienceSection'
 import { StudentGetsStuckSection } from './sections/StudentGetsStuckSection'
 import { TeacherDashboardSection } from './sections/TeacherDashboardSection'
+import { RubricGradingSection } from './sections/RubricGradingSection'
 import { AdminBrandingSection } from './sections/AdminBrandingSection'
 import { AnalyticsImpactSection } from './sections/AnalyticsImpactSection'
 import { Button } from '@/components/ui/button'
@@ -57,7 +58,7 @@ export function DemoExperience() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(37,99,235,0.14),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(20,184,166,0.12),transparent_28%),linear-gradient(to_bottom,#f8fbff,#ffffff_38%)] px-4 py-8 md:px-8 md:py-10">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(14,165,233,0.14),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(20,184,166,0.1),transparent_28%),linear-gradient(to_bottom,#0b1220,#111827_40%,#0b1220)] px-4 py-8 md:px-8 md:py-10">
       <div className="mx-auto max-w-[1300px] space-y-6">
         <header className="rounded-2xl border border-border/70 bg-card/80 p-5 backdrop-blur md:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -155,6 +156,7 @@ export function DemoExperience() {
                 {currentSection.id === 'student_experience' && <StudentExperienceSection />}
                 {currentSection.id === 'student_gets_stuck' && <StudentGetsStuckSection />}
                 {currentSection.id === 'teacher_dashboard' && <TeacherDashboardSection />}
+                {currentSection.id === 'rubric_grading' && <RubricGradingSection />}
                 {currentSection.id === 'admin_branding' && <AdminBrandingSection />}
                 {currentSection.id === 'analytics_impact' && <AnalyticsImpactSection />}
               </motion.div>

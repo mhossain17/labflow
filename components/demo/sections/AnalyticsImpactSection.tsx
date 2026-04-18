@@ -103,7 +103,7 @@ export function AnalyticsImpactSection() {
     <section className="space-y-5">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-          Section 7: Analytics / Impact
+          Section 8: Analytics / Impact
         </p>
         <h2 className="text-2xl font-semibold tracking-tight">Outcome Storytelling with Data</h2>
         <p className="max-w-3xl text-sm text-muted-foreground">
@@ -113,25 +113,39 @@ export function AnalyticsImpactSection() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <Card className="border-border/80">
+        <Card className="border-slate-700/80 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-100">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="size-4 text-primary" />
               Student Progress Trend
             </CardTitle>
-            <CardDescription>Completed lab runs across the school week</CardDescription>
+            <CardDescription className="text-slate-300">
+              Completed lab runs across the school week
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={snapshot.completionSeries} margin={{ top: 6, right: 16, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} width={32} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis
+                    dataKey="day"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: '#cbd5e1', fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    width={32}
+                    tick={{ fill: '#cbd5e1', fontSize: 12 }}
+                  />
                   <Tooltip
                     contentStyle={{
                       borderRadius: '10px',
-                      border: '1px solid hsl(var(--border))',
+                      border: '1px solid #334155',
+                      backgroundColor: '#0f172a',
+                      color: '#e2e8f0',
                       fontSize: '13px',
                     }}
                     formatter={(value) => [value, 'Completed labs']}
@@ -139,7 +153,7 @@ export function AnalyticsImpactSection() {
                   <Line
                     type="monotone"
                     dataKey="completed"
-                    stroke="#2563eb"
+                    stroke="#38bdf8"
                     strokeWidth={3}
                     dot={{ r: 4 }}
                     activeDot={{ r: 6 }}
@@ -153,19 +167,19 @@ export function AnalyticsImpactSection() {
                 key={`completion-${snapshot.completionRate}`}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-border bg-background p-3"
+                className="rounded-xl border border-slate-700 bg-slate-950/65 p-3"
               >
-                <p className="text-xs text-muted-foreground">Lab completion rate</p>
-                <p className="text-2xl font-semibold">{snapshot.completionRate}%</p>
+                <p className="text-xs text-slate-300">Lab completion rate</p>
+                <p className="text-2xl font-semibold text-slate-100">{snapshot.completionRate}%</p>
               </motion.div>
               <motion.div
                 key={`time-${snapshot.avgTimeMin}`}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-border bg-background p-3"
+                className="rounded-xl border border-slate-700 bg-slate-950/65 p-3"
               >
-                <p className="text-xs text-muted-foreground">Avg completion time</p>
-                <p className="text-2xl font-semibold">{snapshot.avgTimeMin} min</p>
+                <p className="text-xs text-slate-300">Avg completion time</p>
+                <p className="text-2xl font-semibold text-slate-100">{snapshot.avgTimeMin} min</p>
               </motion.div>
             </div>
           </CardContent>

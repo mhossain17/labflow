@@ -30,10 +30,10 @@ const INITIAL_STUDENTS: DemoStudent[] = [
 const TOTAL_STEPS = 5
 
 const STATUS_STYLE: Record<MonitorStatus, string> = {
-  on_track: 'bg-green-500/15 text-green-700 dark:text-green-400',
-  need_help: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
-  stuck: 'bg-red-500/15 text-red-700 dark:text-red-400',
-  finished_step: 'bg-blue-500/15 text-blue-700 dark:text-blue-400',
+  on_track: 'bg-green-500/20 text-green-200',
+  need_help: 'bg-amber-500/20 text-amber-200',
+  stuck: 'bg-red-500/20 text-red-200',
+  finished_step: 'bg-blue-500/20 text-blue-200',
 }
 
 const STATUS_LABEL: Record<MonitorStatus, string> = {
@@ -115,7 +115,7 @@ export function TeacherDashboardSection() {
         </p>
       </div>
 
-      <Card className="border-border/80">
+      <Card className="border-slate-700/80 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-100">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -123,12 +123,14 @@ export function TeacherDashboardSection() {
                 <Users className="size-4 text-primary" />
                 Biology Period 3 • Live Monitor
               </CardTitle>
-              <CardDescription>Lab: Photosynthesis Through Light Intensity</CardDescription>
+              <CardDescription className="text-slate-300">
+                Lab: Photosynthesis Through Light Intensity
+              </CardDescription>
             </div>
             <motion.div
               animate={livePulse ? { opacity: [0.7, 1, 0.7] } : { opacity: 1 }}
               transition={{ duration: 1.2, repeat: livePulse ? Infinity : 0 }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-green-300 bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-400"
+              className="inline-flex items-center gap-1.5 rounded-full border border-green-400/40 bg-green-500/20 px-2.5 py-1 text-xs font-medium text-green-200"
             >
               <CircleFadingArrowUp className="size-3.5" />
               Live updates
@@ -137,17 +139,17 @@ export function TeacherDashboardSection() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-green-200 bg-green-50 p-3 dark:border-green-900/60 dark:bg-green-950/30">
-              <p className="text-xs text-green-800/80 dark:text-green-300/80">On Track</p>
-              <p className="text-2xl font-semibold text-green-800 dark:text-green-200">{onTrack}</p>
+            <div className="rounded-xl border border-green-500/30 bg-green-500/15 p-3">
+              <p className="text-xs text-green-200/80">On Track</p>
+              <p className="text-2xl font-semibold text-green-100">{onTrack}</p>
             </div>
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/60 dark:bg-amber-950/30">
-              <p className="text-xs text-amber-800/80 dark:text-amber-300/80">Need Help</p>
-              <p className="text-2xl font-semibold text-amber-800 dark:text-amber-200">{needHelp}</p>
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/15 p-3">
+              <p className="text-xs text-amber-200/80">Need Help</p>
+              <p className="text-2xl font-semibold text-amber-100">{needHelp}</p>
             </div>
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-900/60 dark:bg-red-950/30">
-              <p className="text-xs text-red-800/80 dark:text-red-300/80">Stuck</p>
-              <p className="text-2xl font-semibold text-red-800 dark:text-red-200">{stuck}</p>
+            <div className="rounded-xl border border-red-500/30 bg-red-500/15 p-3">
+              <p className="text-xs text-red-200/80">Stuck</p>
+              <p className="text-2xl font-semibold text-red-100">{stuck}</p>
             </div>
           </div>
 
@@ -157,7 +159,7 @@ export function TeacherDashboardSection() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+                className="rounded-xl border border-red-500/35 bg-red-500/15 px-4 py-3 text-sm text-red-100"
               >
                 <p className="inline-flex items-center gap-1.5 font-semibold">
                   <AlertTriangle className="size-4" />
@@ -179,13 +181,15 @@ export function TeacherDashboardSection() {
                   key={student.id}
                   layout
                   transition={{ duration: 0.3 }}
-                  className="rounded-xl border border-border bg-background p-3"
+                  className="rounded-xl border border-slate-700 bg-slate-950/65 p-3"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-semibold">{student.name}</p>
                     <Badge className={STATUS_STYLE[student.status]}>{STATUS_LABEL[student.status]}</Badge>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">Step {student.step} of {TOTAL_STEPS}</p>
+                  <p className="mt-1 text-xs text-slate-300">
+                    Step {student.step} of {TOTAL_STEPS}
+                  </p>
                   <div className="mt-2">
                     <Progress value={progress} />
                   </div>

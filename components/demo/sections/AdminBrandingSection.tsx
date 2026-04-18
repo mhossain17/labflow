@@ -63,7 +63,7 @@ export function AdminBrandingSection() {
     <section className="space-y-5">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-          Section 6: Admin Branding Panel
+          Section 7: Admin Branding Panel
         </p>
         <h2 className="text-2xl font-semibold tracking-tight">Live Brand Personalization</h2>
         <p className="max-w-3xl text-sm text-muted-foreground">
@@ -73,17 +73,19 @@ export function AdminBrandingSection() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="border-border/80">
+        <Card className="border-slate-700/80 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-100">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Palette className="size-4 text-primary" />
               Branding Controls
             </CardTitle>
-            <CardDescription>Organization-level appearance settings (simulated).</CardDescription>
+            <CardDescription className="text-slate-300">
+              Organization-level appearance settings (simulated).
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Logo & Color Preset
               </p>
               <div className="grid gap-2">
@@ -93,8 +95,8 @@ export function AdminBrandingSection() {
                     layout
                     className={`flex items-center justify-between rounded-xl border p-3 ${
                       index === presetIndex
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border bg-background'
+                        ? 'border-primary/70 bg-primary/15'
+                        : 'border-slate-700 bg-slate-950/65'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -106,24 +108,24 @@ export function AdminBrandingSection() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold">{preset.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-slate-300">
                           Primary {preset.primary} • Secondary {preset.secondary}
                         </p>
                       </div>
                     </div>
-                    {index === presetIndex && <Badge>Active</Badge>}
+                    {index === presetIndex && <Badge className="bg-slate-700 text-slate-100">Active</Badge>}
                   </motion.div>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-xl border border-border bg-background p-3">
+            <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-950/65 p-3">
               <div>
                 <p className="text-sm font-semibold">Dark Mode Preview</p>
-                <p className="text-xs text-muted-foreground">Toggle classroom UI contrast mode</p>
+                <p className="text-xs text-slate-300">Toggle classroom UI contrast mode</p>
               </div>
               <div className="inline-flex items-center gap-2">
-                <MoonStar className="size-4 text-muted-foreground" />
+                <MoonStar className="size-4 text-slate-300" />
                 <Switch checked={darkMode} onCheckedChange={() => {}} disabled />
               </div>
             </div>

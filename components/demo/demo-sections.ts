@@ -4,6 +4,7 @@ export type DemoSectionId =
   | 'student_experience'
   | 'student_gets_stuck'
   | 'teacher_dashboard'
+  | 'rubric_grading'
   | 'admin_branding'
   | 'analytics_impact'
 
@@ -30,7 +31,7 @@ export const DEMO_SECTIONS: DemoSectionConfig[] = [
     label: '02',
     title: 'Teacher Lab Creation',
     description: 'Simulate AI generating a complete lab builder draft.',
-    autoAdvanceMs: 14000,
+    autoAdvanceMs: 13000,
     implemented: true,
   },
   {
@@ -38,7 +39,7 @@ export const DEMO_SECTIONS: DemoSectionConfig[] = [
     label: '03',
     title: 'Student Experience',
     description: 'Student dashboard, pre-lab completion, and step progression.',
-    autoAdvanceMs: 13000,
+    autoAdvanceMs: 14000,
     implemented: true,
   },
   {
@@ -46,7 +47,7 @@ export const DEMO_SECTIONS: DemoSectionConfig[] = [
     label: '04',
     title: 'Student Gets Stuck',
     description: 'Status changes to stuck and AI help guidance appears.',
-    autoAdvanceMs: 10000,
+    autoAdvanceMs: 9000,
     implemented: true,
   },
   {
@@ -58,19 +59,27 @@ export const DEMO_SECTIONS: DemoSectionConfig[] = [
     implemented: true,
   },
   {
-    id: 'admin_branding',
+    id: 'rubric_grading',
     label: '06',
+    title: 'Rubric & Grading System',
+    description: 'Rubric authoring, self-assessment, teacher grading, and final grade reveal.',
+    autoAdvanceMs: 14000,
+    implemented: true,
+  },
+  {
+    id: 'admin_branding',
+    label: '07',
     title: 'Admin Branding Panel',
     description: 'Brand updates and dark mode preview in real time.',
-    autoAdvanceMs: 9000,
+    autoAdvanceMs: 8000,
     implemented: true,
   },
   {
     id: 'analytics_impact',
-    label: '07',
+    label: '08',
     title: 'Analytics / Impact',
     description: 'Progress and stuck-point chart storytelling.',
-    autoAdvanceMs: 9000,
+    autoAdvanceMs: 8000,
     implemented: true,
   },
 ]

@@ -1,5 +1,9 @@
 @AGENTS.md
 
+# Git Policy
+
+**Never create branches.** Always commit directly to `main`. Do not open pull requests. Do not use worktrees or feature branches. Push to `origin/main` when the user asks you to push.
+
 # LabFlow AI — Developer Guide
 
 ## Project Overview

@@ -194,21 +194,28 @@ export function TeacherLabCreationSection() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 bg-card/90">
+        <Card className="border-slate-700/80 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-slate-100">
           <CardHeader>
             <CardTitle>Lab Builder Preview</CardTitle>
-            <CardDescription>Auto-filled fields as they appear during generation.</CardDescription>
+            <CardDescription className="text-slate-300">
+              Auto-filled fields as they appear during generation.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Lab Title
               </p>
-              <Input readOnly value={typedTitle} placeholder="AI-generated title will appear here..." />
+              <Input
+                readOnly
+                value={typedTitle}
+                placeholder="AI-generated title will appear here..."
+                className="border-slate-700 bg-slate-900/70 text-slate-100 placeholder:text-slate-500"
+              />
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Learning Objectives
               </p>
               <ul className="space-y-2">
@@ -219,14 +226,14 @@ export function TeacherLabCreationSection() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
-                      className="rounded-lg border border-border/80 bg-background px-3 py-2 text-sm"
+                      className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100"
                     >
                       {objective}
                     </motion.li>
                   ))}
                 </AnimatePresence>
                 {visibleObjectives === 0 && (
-                  <li className="rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
+                  <li className="rounded-lg border border-dashed border-slate-600 px-3 py-2 text-sm text-slate-400">
                     Waiting for objectives...
                   </li>
                 )}
@@ -234,7 +241,7 @@ export function TeacherLabCreationSection() {
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Materials
               </p>
               <div className="flex flex-wrap gap-2">
@@ -252,7 +259,7 @@ export function TeacherLabCreationSection() {
                   ))}
                 </AnimatePresence>
                 {visibleMaterials === 0 && (
-                  <span className="rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground">
+                  <span className="rounded-full border border-dashed border-slate-600 px-2.5 py-1 text-xs text-slate-400">
                     Waiting for materials...
                   </span>
                 )}
@@ -260,7 +267,7 @@ export function TeacherLabCreationSection() {
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Procedure + Reflection Prompts
               </p>
               <div className="space-y-2">
@@ -271,18 +278,18 @@ export function TeacherLabCreationSection() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="rounded-xl border border-border bg-background p-3"
+                      className="rounded-xl border border-slate-700 bg-slate-950/70 p-3"
                     >
                       <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                         Step {index + 1}
                       </p>
-                      <p className="mt-1 text-sm font-medium">{step.title}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">{step.instructions}</p>
+                      <p className="mt-1 text-sm font-medium text-slate-100">{step.title}</p>
+                      <p className="mt-1 text-sm text-slate-300">{step.instructions}</p>
                       {index < visibleReflections && (
                         <motion.p
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="mt-2 rounded-md bg-muted px-2.5 py-2 text-xs text-foreground/90"
+                          className="mt-2 rounded-md border border-slate-700 bg-slate-900/70 px-2.5 py-2 text-xs text-slate-200"
                         >
                           Reflection prompt: {step.reflection}
                         </motion.p>
@@ -291,7 +298,7 @@ export function TeacherLabCreationSection() {
                   ))}
                 </AnimatePresence>
                 {visibleSteps === 0 && (
-                  <div className="rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">
+                  <div className="rounded-xl border border-dashed border-slate-600 p-3 text-sm text-slate-400">
                     Waiting for procedure steps...
                   </div>
                 )}
