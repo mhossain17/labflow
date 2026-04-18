@@ -102,6 +102,78 @@ export async function archiveLab(labId: string) {
   revalidatePath(`/teacher/labs/${labId}`)
 }
 
+export async function createLabWithContent(data: {
+  title: string
+  teacher_id: string
+  organization_id: string
+  overview?: string
+  objectives?: string[]
+  standards?: string[]
+  materials_list?: string[]
+  safety_notes?: string
+  background?: string
+  ai_generated?: boolean
+  steps: Array<{
+    title: string
+    instructions: string
+    checkpoint?: string
+    reflection_prompt?: string
+    troubleshooting?: string
+    data_entry_fields?: Array<{ label: string; type: 'text' | 'number'; unit?: string; required: boolean }>
+  }>
+  pre_lab_questions: Array<{
+    question_text: string
+    question_type: 'short_answer' | 'multiple_choice' | 'true_false'
+    options?: string[]
+  }>
+}) {
+  const supabase = await createClient()
+  const db = supabase as any
+
+  const { steps, pre_lab_questions, ...labData } = data
+
+  const { data: lab, error: labError } = await db
+    .from('labs')
+    .insert({ status: 'draft', ...labData })
+    .select()
+    .single()
+  if (labError) throw labError
+
+  if (steps.length > 0) {
+    const { error: stepsError } = await db.from('lab_steps').insert(
+      steps.map((s, i) => ({
+        lab_id: lab.id,
+        title: s.title,
+        instructions: s.instructions,
+        checkpoint: s.checkpoint ?? null,
+        reflection_prompt: s.reflection_prompt ?? null,
+        troubleshooting: s.troubleshooting ?? null,
+        data_entry_fields: s.data_entry_fields ?? null,
+        step_number: i + 1,
+      }))
+    )
+    if (stepsError) throw stepsError
+  }
+
+  if (pre_lab_questions.length > 0) {
+    const { error: questionsError } = await db.from('pre_lab_questions').insert(
+      pre_lab_questions.map((q, i) => ({
+        lab_id: lab.id,
+        question_text: q.question_text,
+        question_type: q.question_type,
+        options: q.options ?? null,
+        required: true,
+        position: i,
+      }))
+    )
+    if (questionsError) throw questionsError
+  }
+
+  revalidatePath('/teacher/labs')
+  revalidatePath(`/teacher/labs/${lab.id}/edit`)
+  return lab as { id: string }
+}
+
 // ── Pre-Lab Questions ────────────────────────────────────────────────────────
 
 export async function upsertPreLabQuestion(

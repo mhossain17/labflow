@@ -31,6 +31,9 @@ import {
   Beaker,
   FileText,
   Rocket,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { LabWithSteps, LabStatus, DataEntryField } from '@/types/app'
@@ -431,6 +434,17 @@ export function LabBuilderForm({ lab, initialStep = 1 }: LabBuilderFormProps) {
                 List everything students need and any safety requirements.
               </p>
             </div>
+            <SectionAIPanel
+              section="materials"
+              labTitle={watch('title')}
+              labOverview={watch('overview')}
+              onGenerated={(data) => {
+                if (data.materials_list) {
+                  setValue('materials_list', data.materials_list.map((v) => ({ value: v })))
+                }
+                if (data.safety_notes) setValue('safety_notes', data.safety_notes)
+              }}
+            />
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Materials List</Label>
@@ -485,6 +499,14 @@ export function LabBuilderForm({ lab, initialStep = 1 }: LabBuilderFormProps) {
                 Provide context students should understand before beginning.
               </p>
             </div>
+            <SectionAIPanel
+              section="background"
+              labTitle={watch('title')}
+              labOverview={watch('overview')}
+              onGenerated={(data) => {
+                if (data.background) setValue('background', data.background)
+              }}
+            />
             <div className="space-y-1.5">
               <Label htmlFor="background">Background Information</Label>
               <Textarea
@@ -506,6 +528,25 @@ export function LabBuilderForm({ lab, initialStep = 1 }: LabBuilderFormProps) {
                 Questions students answer before beginning the lab.
               </p>
             </div>
+            <SectionAIPanel
+              section="prelab"
+              labTitle={watch('title')}
+              labOverview={watch('overview')}
+              onGenerated={(data) => {
+                if (data.pre_lab_questions?.length) {
+                  setValue(
+                    'pre_lab_questions',
+                    data.pre_lab_questions.map((q, i) => ({
+                      question_text: q.question_text,
+                      question_type: q.question_type,
+                      options: q.options ?? [],
+                      required: true,
+                      position: i,
+                    }))
+                  )
+                }
+              }}
+            />
             <PreLabSection control={control} register={register} watch={watch} />
           </div>
         )}
@@ -516,9 +557,30 @@ export function LabBuilderForm({ lab, initialStep = 1 }: LabBuilderFormProps) {
             <div>
               <h2 className="text-lg font-semibold">Lab Procedure</h2>
               <p className="text-sm text-muted-foreground">
-                Add steps students will follow. Drag to reorder. Use AI to fill in details.
+                Add steps students will follow. Drag to reorder.
               </p>
             </div>
+            <SectionAIPanel
+              section="procedure"
+              labTitle={watch('title')}
+              labOverview={watch('overview')}
+              onGenerated={(data) => {
+                if (data.steps?.length) {
+                  setValue(
+                    'steps',
+                    data.steps.map((s, i) => ({
+                      title: s.title,
+                      instructions: s.instructions,
+                      checkpoint: s.checkpoint ?? '',
+                      reflection_prompt: s.reflection_prompt ?? '',
+                      troubleshooting: s.troubleshooting ?? '',
+                      data_entry_fields: (s.data_entry_fields ?? []) as Array<DataEntryField>,
+                      step_number: i + 1,
+                    }))
+                  )
+                }
+              }}
+            />
             <StepList control={control} register={register} watch={watch} setValue={setValue} />
           </div>
         )}
@@ -588,6 +650,132 @@ export function LabBuilderForm({ lab, initialStep = 1 }: LabBuilderFormProps) {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── Per-section AI panel ──────────────────────────────────────────────────────
+
+type GeneratedSection = {
+  materials_list?: string[]
+  safety_notes?: string
+  background?: string
+  pre_lab_questions?: Array<{
+    question_text: string
+    question_type: 'short_answer' | 'multiple_choice' | 'true_false'
+    options?: string[]
+  }>
+  steps?: Array<{
+    title: string
+    instructions: string
+    checkpoint?: string
+    reflection_prompt?: string
+    troubleshooting?: string
+    data_entry_fields?: Array<{ label: string; type: 'text' | 'number'; unit?: string; required: boolean }>
+  }>
+}
+
+function SectionAIPanel({
+  section,
+  labTitle,
+  labOverview,
+  onGenerated,
+}: {
+  section: 'materials' | 'background' | 'prelab' | 'procedure'
+  labTitle: string
+  labOverview: string
+  onGenerated: (data: GeneratedSection) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [extraPrompt, setExtraPrompt] = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const SECTION_LABELS: Record<typeof section, string> = {
+    materials: 'materials list and safety notes',
+    background: 'background knowledge section',
+    prelab: 'pre-lab questions',
+    procedure: 'procedure steps',
+  }
+
+  async function generate() {
+    setGenerating(true)
+    setError(null)
+    try {
+      const prompt = [
+        labTitle,
+        labOverview,
+        extraPrompt.trim() ? `Additional context: ${extraPrompt}` : '',
+      ].filter(Boolean).join('. ')
+
+      const res = await fetch('/api/ai/generate-lab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, gradeLevel: '6-8', duration: '45' }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error ?? 'Generation failed')
+      }
+      const { lab } = await res.json()
+      onGenerated(lab)
+      setOpen(false)
+      setExtraPrompt('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Generation failed')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-900/10">
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-purple-700 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 transition-colors"
+      >
+        <Sparkles className="size-4 shrink-0" />
+        Generate {SECTION_LABELS[section]} with AI
+        {open ? <ChevronUp className="size-3.5 ml-auto" /> : <ChevronDown className="size-3.5 ml-auto" />}
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4 space-y-3 border-t border-purple-200 dark:border-purple-800 pt-3">
+          {(!labTitle && !labOverview) && (
+            <p className="text-xs text-muted-foreground">
+              Fill in the Overview section first so the AI has context for this lab.
+            </p>
+          )}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">
+              Context (optional — add anything the AI should know)
+            </label>
+            <textarea
+              rows={2}
+              value={extraPrompt}
+              onChange={(e) => setExtraPrompt(e.target.value)}
+              placeholder="e.g. focus on safety with acids, use only household materials..."
+              disabled={generating}
+              className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+            />
+          </div>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <Button
+            type="button"
+            size="sm"
+            onClick={generate}
+            disabled={generating || (!labTitle && !labOverview)}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+          >
+            {generating ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+            {generating ? 'Generating…' : 'Generate'}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            This will replace the current content in this section.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

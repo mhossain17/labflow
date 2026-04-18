@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createLab, upsertLabStep, upsertPreLabQuestion } from '@/features/lab-builder/actions'
+import { createLab, createLabWithContent } from '@/features/lab-builder/actions'
 
 interface Props {
   aiEnabled: boolean
@@ -62,58 +62,21 @@ export function NewLabClient({ aiEnabled }: Props) {
       if (!meRes.ok) throw new Error('Could not load your account')
       const { id: teacherId, organization_id } = await meRes.json()
 
-      // 3. Create lab with all metadata
-      const lab = await createLab({
+      // 3. Create lab + all steps + all questions in one atomic server action
+      const lab = await createLabWithContent({
         title: generated.title,
         teacher_id: teacherId,
         organization_id,
         overview: generated.overview,
-        objectives: generated.objectives,
+        objectives: generated.objectives ?? [],
         standards: generated.standards ?? [],
         materials_list: generated.materials_list ?? [],
         safety_notes: generated.safety_notes,
         background: generated.background,
         ai_generated: true,
+        steps: generated.steps ?? [],
+        pre_lab_questions: generated.pre_lab_questions ?? [],
       })
-
-      // 4. Save steps (sequential to preserve order)
-      const steps: Array<{
-        title: string
-        instructions: string
-        checkpoint?: string
-        reflection_prompt?: string
-        troubleshooting?: string
-        data_entry_fields?: Array<{ label: string; type: 'text' | 'number'; unit?: string; required: boolean }>
-      }> = generated.steps ?? []
-      for (let i = 0; i < steps.length; i++) {
-        const s = steps[i]
-        await upsertLabStep(lab.id, {
-          title: s.title,
-          instructions: s.instructions,
-          checkpoint: s.checkpoint,
-          reflection_prompt: s.reflection_prompt,
-          troubleshooting: s.troubleshooting,
-          data_entry_fields: s.data_entry_fields ?? [],
-          step_number: i + 1,
-        })
-      }
-
-      // 5. Save pre-lab questions
-      const questions: Array<{
-        question_text: string
-        question_type: 'short_answer' | 'multiple_choice' | 'true_false'
-        options?: string[]
-      }> = generated.pre_lab_questions ?? []
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i]
-        await upsertPreLabQuestion(lab.id, {
-          question_text: q.question_text,
-          question_type: q.question_type,
-          options: q.options,
-          required: true,
-          position: i,
-        })
-      }
 
       setPhase('done')
       router.push(`/teacher/labs/${lab.id}/edit?step=1`)
