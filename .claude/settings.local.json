@@ -14,7 +14,13 @@
       "Bash(node -e \"const {Select} = require\\('/Users/msh/LabFlow - Classroom Lab Manager/node_modules/@base-ui/react/select'\\); console.log\\(Object.keys\\(Select\\)\\)\")",
       "Bash(node -e ' *)",
       "Bash(xargs ls *)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(kill 89617)",
+      "Bash(supabase link *)",
+      "Bash(supabase db *)",
+      "Bash(node supabase/seed-all.mjs)",
+      "Bash(pkill -f \"supabase db diff\")",
+      "Bash(node supabase/seed-demo.mjs)"
     ]
   }
 }

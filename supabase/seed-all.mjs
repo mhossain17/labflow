@@ -96,23 +96,37 @@ async function upsertUser({ email, password, role, first_name, last_name }) {
   // Check if user already exists
   const { data: listData } = await supabase.auth.admin.listUsers()
   const existing = listData?.users?.find(u => u.email === email)
+  let userId
+
   if (existing) {
-    // Make sure app_metadata.role is set
     await supabase.auth.admin.updateUserById(existing.id, {
       app_metadata: { role }
     })
-    return existing.id
+    userId = existing.id
+  } else {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { organization_id: ORG_ID, role, first_name, last_name },
+      app_metadata: { role }
+    })
+    if (error) throw error
+    userId = data.user.id
   }
 
-  const { data, error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { organization_id: ORG_ID, role, first_name, last_name },
-    app_metadata: { role }
-  })
-  if (error) throw error
-  return data.user.id
+  // Ensure profile exists (trigger may not have fired for pre-existing users)
+  const { error: profileError } = await supabase.from('profiles').upsert({
+    id: userId,
+    organization_id: ORG_ID,
+    role,
+    first_name,
+    last_name,
+    avatar_url: null
+  }, { onConflict: 'id' })
+  if (profileError) throw profileError
+
+  return userId
 }
 
 // ─── 4. Class ─────────────────────────────────────────────────

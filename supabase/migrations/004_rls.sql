@@ -11,6 +11,32 @@ RETURNS uuid LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT organization_id FROM public.profiles WHERE id = auth.uid();
 $$;
 
+-- Cross-table helpers (SECURITY DEFINER prevents RLS recursion)
+CREATE OR REPLACE FUNCTION public.teacher_has_student(p_teacher_id uuid, p_student_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.class_enrollments ce
+    JOIN public.classes c ON c.id = ce.class_id
+    WHERE ce.student_id = p_student_id AND c.teacher_id = p_teacher_id
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.student_enrolled_in_class(p_class_id uuid, p_student_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.class_enrollments
+    WHERE class_id = p_class_id AND student_id = p_student_id
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_teacher_of_class(p_class_id uuid, p_teacher_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.classes
+    WHERE id = p_class_id AND teacher_id = p_teacher_id
+  );
+$$;
+
 -- ============================================================
 -- Enable RLS on all tables
 -- ============================================================
@@ -57,13 +83,7 @@ CREATE POLICY "profiles_select_teacher" ON public.profiles
   FOR SELECT USING (
     public.my_role() = 'teacher'
     AND organization_id = public.my_org()
-    AND EXISTS (
-      SELECT 1
-      FROM public.class_enrollments ce
-      JOIN public.classes c ON c.id = ce.class_id
-      WHERE ce.student_id = profiles.id
-        AND c.teacher_id = auth.uid()
-    )
+    AND public.teacher_has_student(auth.uid(), profiles.id)
   );
 
 -- Admin sees all within org (super_admin sees all)
@@ -107,11 +127,7 @@ CREATE POLICY "classes_select_teacher_admin" ON public.classes
 CREATE POLICY "classes_select_student" ON public.classes
   FOR SELECT USING (
     public.my_role() = 'student'
-    AND EXISTS (
-      SELECT 1 FROM public.class_enrollments ce
-      WHERE ce.class_id = classes.id
-        AND ce.student_id = auth.uid()
-    )
+    AND public.student_enrolled_in_class(classes.id, auth.uid())
   );
 
 -- Insert: teacher or admin in same org
@@ -139,41 +155,26 @@ CREATE POLICY "classes_delete" ON public.classes
 -- ============================================================
 -- class_enrollments
 -- ============================================================
--- Teacher of the class or admin can select
+-- Teacher of the class, admin, or own student record can select
 CREATE POLICY "enrollments_select_teacher_admin" ON public.class_enrollments
   FOR SELECT USING (
     public.my_role() IN ('school_admin', 'super_admin')
-    OR EXISTS (
-      SELECT 1 FROM public.classes c
-      WHERE c.id = class_enrollments.class_id
-        AND c.teacher_id = auth.uid()
-    )
+    OR public.is_teacher_of_class(class_enrollments.class_id, auth.uid())
+    OR student_id = auth.uid()
   );
-
--- Students see their own enrollments
-CREATE POLICY "enrollments_select_student" ON public.class_enrollments
-  FOR SELECT USING (student_id = auth.uid());
 
 -- Teacher of the class or admin can insert
 CREATE POLICY "enrollments_insert" ON public.class_enrollments
   FOR INSERT WITH CHECK (
     public.my_role() IN ('school_admin', 'super_admin')
-    OR EXISTS (
-      SELECT 1 FROM public.classes c
-      WHERE c.id = class_enrollments.class_id
-        AND c.teacher_id = auth.uid()
-    )
+    OR public.is_teacher_of_class(class_enrollments.class_id, auth.uid())
   );
 
 -- Teacher of the class or admin can delete
 CREATE POLICY "enrollments_delete" ON public.class_enrollments
   FOR DELETE USING (
     public.my_role() IN ('school_admin', 'super_admin')
-    OR EXISTS (
-      SELECT 1 FROM public.classes c
-      WHERE c.id = class_enrollments.class_id
-        AND c.teacher_id = auth.uid()
-    )
+    OR public.is_teacher_of_class(class_enrollments.class_id, auth.uid())
   );
 
 -- ============================================================

@@ -10,7 +10,7 @@ const ROLE_PATHS: Record<string, string[]> = {
   '/admin': ['school_admin', 'super_admin'],
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
   const pathname = request.nextUrl.pathname
 
