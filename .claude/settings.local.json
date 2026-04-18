@@ -6,7 +6,15 @@
       "Read(//private/tmp/**)",
       "Bash(npx create-next-app@latest labflow-temp --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --yes)",
       "Bash(npm install *)",
-      "Bash(npx shadcn@latest init --yes --defaults)"
+      "Bash(npx shadcn@latest init --yes --defaults)",
+      "Bash(npx shadcn@latest add button card dialog form input select textarea badge progress separator skeleton tabs tooltip label switch alert avatar dropdown-menu sheet popover command --yes)",
+      "Bash(npm run *)",
+      "Bash(npm pkg *)",
+      "Bash(node -e \"const s = require\\('/Users/msh/LabFlow - Classroom Lab Manager/node_modules/@base-ui/react/select'\\); console.log\\(Object.keys\\(s\\)\\)\")",
+      "Bash(node -e \"const {Select} = require\\('/Users/msh/LabFlow - Classroom Lab Manager/node_modules/@base-ui/react/select'\\); console.log\\(Object.keys\\(Select\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(xargs ls *)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

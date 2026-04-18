@@ -1,5 +1,5 @@
 {
-  "name": "labflow-temp",
+  "name": "labflow",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.103.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",

@@ -1,0 +1,101 @@
+#!/usr/bin/env node
+/**
+ * Seed script: creates demo users via Supabase Admin Auth API.
+ * Run AFTER migrations and static seed.sql.
+ * Usage: npx ts-node --project tsconfig.json supabase/seed-users.ts
+ *
+ * Requires: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local
+ */
+
+import { createClient } from '@supabase/supabase-js'
+import * as dotenv from 'dotenv'
+import * as path from 'path'
+import * as fs from 'fs'
+
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+  process.exit(1)
+}
+
+const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+})
+
+const ORG_ID = 'aaaaaaaa-0000-0000-0000-000000000001'
+
+const DEMO_USERS = [
+  {
+    email: 'admin@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'school_admin',
+    first_name: 'Alice',
+    last_name: 'Admin',
+  },
+  {
+    email: 'teacher@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'teacher',
+    first_name: 'Taylor',
+    last_name: 'Teacher',
+  },
+  {
+    email: 'student1@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'student',
+    first_name: 'Sam',
+    last_name: 'Student',
+  },
+  {
+    email: 'student2@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'student',
+    first_name: 'Jordan',
+    last_name: 'Learner',
+  },
+]
+
+async function seedUsers() {
+  const createdIds: Record<string, string> = {}
+
+  for (const user of DEMO_USERS) {
+    console.log(`Creating user: ${user.email}`)
+    const { data, error } = await adminClient.auth.admin.createUser({
+      email: user.email,
+      password: user.password,
+      email_confirm: true,
+      user_metadata: {
+        organization_id: ORG_ID,
+        role: user.role,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      },
+      app_metadata: {
+        role: user.role,
+      },
+    })
+
+    if (error) {
+      console.error(`Failed to create ${user.email}:`, error.message)
+      continue
+    }
+
+    const id = data.user?.id
+    if (id) {
+      createdIds[user.role === 'teacher' ? 'teacher' : user.email] = id
+      console.log(`  Created ${user.email} → ${id}`)
+    }
+  }
+
+  // Write IDs to a file for the next seed step
+  const outputPath = path.resolve(process.cwd(), 'supabase/seed-ids.json')
+  fs.writeFileSync(outputPath, JSON.stringify(createdIds, null, 2))
+  console.log(`\nUser IDs written to ${outputPath}`)
+  console.log('Next: run seed-data.sql referencing these UUIDs')
+}
+
+seedUsers().catch(console.error)
