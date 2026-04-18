@@ -1,10 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { isDemoGatewayEmail } from '@/lib/demo/accounts'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+  if (isDemoGatewayEmail(user.email)) redirect('/demo/control')
 
   const role = user.app_metadata?.role as string | undefined
 

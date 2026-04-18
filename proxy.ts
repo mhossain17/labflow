@@ -13,9 +13,13 @@ const ROLE_PATHS: Record<string, string[]> = {
 export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
   const pathname = request.nextUrl.pathname
+  const isPublicPath =
+    pathname === '/' ||
+    pathname === '/demo' ||
+    PUBLIC_PATHS.some((path) => pathname.startsWith(path))
 
   // If no user and accessing protected route → redirect to login
-  if (!user && !PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+  if (!user && !isPublicPath) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

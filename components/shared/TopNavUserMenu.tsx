@@ -10,8 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Settings, Palette, LogOut, ShieldCheck } from 'lucide-react'
+import { Settings, Palette, LogOut, ShieldCheck, ArrowRightLeft } from 'lucide-react'
 import { signOut } from '@/lib/auth/actions'
+import { isDemoEmail } from '@/lib/demo/accounts'
 
 interface TopNavUserMenuProps {
   fullName: string
@@ -24,6 +25,7 @@ interface TopNavUserMenuProps {
 export function TopNavUserMenu({ fullName, email, initials, avatarUrl, role }: TopNavUserMenuProps) {
   const router = useRouter()
   const isAdmin = role === 'school_admin' || role === 'super_admin'
+  const showDemoControl = isDemoEmail(email)
 
   return (
     <DropdownMenu>
@@ -66,6 +68,15 @@ export function TopNavUserMenu({ fullName, email, initials, avatarUrl, role }: T
           <Palette className="mr-2 h-4 w-4" />
           Appearance
         </DropdownMenuItem>
+        {showDemoControl && (
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => router.push('/demo/control')}
+          >
+            <ArrowRightLeft className="mr-2 h-4 w-4" />
+            Demo Control
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-0 focus:bg-transparent" onSelect={(e) => e.preventDefault()}>
           <form action={signOut} className="w-full">

@@ -86,10 +86,17 @@ Run in order via `supabase db push`:
 ## Demo Accounts (after seeding)
 | Email | Password | Role |
 |---|---|---|
+| demo@westlake.demo | LabFlow2025! | Demo Gateway |
 | admin@westlake.demo | LabFlow2025! | School Admin |
 | teacher@westlake.demo | LabFlow2025! | Teacher |
 | student1@westlake.demo | LabFlow2025! | Student |
 | student2@westlake.demo | LabFlow2025! | Student |
+| student3@westlake.demo | LabFlow2025! | Student |
+| student4@westlake.demo | LabFlow2025! | Student |
+| student5@westlake.demo | LabFlow2025! | Student |
+| student6@westlake.demo | LabFlow2025! | Student |
+
+Use `demo@westlake.demo` to sign in, then switch personas from `/demo/control`.
 
 ## Troubleshooting
 

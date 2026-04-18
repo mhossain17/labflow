@@ -269,11 +269,87 @@ async function seedAssignment(teacherId) {
 }
 
 // ─── 9. Enrollments ───────────────────────────────────────────
-async function seedEnrollments(student1Id, student2Id) {
-  const { error } = await supabase.from('class_enrollments').upsert([
-    { class_id: CLASS_ID, student_id: student1Id },
-    { class_id: CLASS_ID, student_id: student2Id }
-  ], { onConflict: 'class_id,student_id' })
+async function seedEnrollments(studentIds) {
+  const rows = studentIds.map((studentId) => ({ class_id: CLASS_ID, student_id: studentId }))
+  const { error } = await supabase.from('class_enrollments').upsert(rows, { onConflict: 'class_id,student_id' })
+  if (error) throw error
+}
+
+// ─── 10. Student run states ──────────────────────────────────
+async function seedStudentRunStates(studentIds) {
+  const now = Date.now()
+  const iso = (msAgo) => new Date(now - msAgo).toISOString()
+
+  const [s1Id, s2Id, s3Id, s4Id, s5Id, s6Id] = studentIds
+
+  const { error } = await supabase.from('student_lab_runs').upsert([
+    {
+      assignment_id: ASSIGNMENT_ID,
+      student_id: s1Id,
+      lab_id: LAB_ID,
+      current_step: 2,
+      prelab_completed: true,
+      status: 'on_track',
+      quick_note: 'Proceeding at expected pace.',
+      started_at: iso(1000 * 60 * 60 * 26),
+      completed_at: null,
+    },
+    {
+      assignment_id: ASSIGNMENT_ID,
+      student_id: s2Id,
+      lab_id: LAB_ID,
+      current_step: 2,
+      prelab_completed: true,
+      status: 'stuck',
+      quick_note: 'Needs support with mass/volume setup.',
+      started_at: iso(1000 * 60 * 60 * 21),
+      completed_at: null,
+    },
+    {
+      assignment_id: ASSIGNMENT_ID,
+      student_id: s3Id,
+      lab_id: LAB_ID,
+      current_step: 3,
+      prelab_completed: true,
+      status: 'need_help',
+      quick_note: 'Requested teacher check-in.',
+      started_at: iso(1000 * 60 * 60 * 18),
+      completed_at: null,
+    },
+    {
+      assignment_id: ASSIGNMENT_ID,
+      student_id: s4Id,
+      lab_id: LAB_ID,
+      current_step: 3,
+      prelab_completed: true,
+      status: 'waiting_for_check',
+      quick_note: 'Waiting for teacher verification.',
+      started_at: iso(1000 * 60 * 60 * 15),
+      completed_at: null,
+    },
+    {
+      assignment_id: ASSIGNMENT_ID,
+      student_id: s5Id,
+      lab_id: LAB_ID,
+      current_step: 4,
+      prelab_completed: true,
+      status: 'finished_step',
+      quick_note: 'Ready for final review.',
+      started_at: iso(1000 * 60 * 60 * 10),
+      completed_at: null,
+    },
+    {
+      assignment_id: ASSIGNMENT_ID,
+      student_id: s6Id,
+      lab_id: LAB_ID,
+      current_step: 4,
+      prelab_completed: true,
+      status: 'finished_step',
+      quick_note: 'Completed lab and awaiting grade.',
+      started_at: iso(1000 * 60 * 60 * 30),
+      completed_at: iso(1000 * 60 * 60 * 2),
+    },
+  ], { onConflict: 'assignment_id,student_id' })
   if (error) throw error
 }
 
@@ -286,10 +362,15 @@ async function main() {
   await step('Create feature flags', seedFlags)
 
   console.log('\nStep 2: Demo users')
+  await step('demo@westlake.demo (demo gateway)',  () => upsertUser({ email: 'demo@westlake.demo',   password: 'LabFlow2025!', role: 'school_admin', first_name: 'Demo',   last_name: 'Gateway' }))
   const adminId   = await step('admin@westlake.demo (school_admin)',   () => upsertUser({ email: 'admin@westlake.demo',    password: 'LabFlow2025!', role: 'school_admin', first_name: 'Alice',  last_name: 'Admin'   }))
   const teacherId = await step('teacher@westlake.demo (teacher)',       () => upsertUser({ email: 'teacher@westlake.demo',  password: 'LabFlow2025!', role: 'teacher',      first_name: 'Taylor', last_name: 'Teacher' }))
   const s1Id      = await step('student1@westlake.demo (student)',      () => upsertUser({ email: 'student1@westlake.demo', password: 'LabFlow2025!', role: 'student',      first_name: 'Sam',    last_name: 'Student' }))
   const s2Id      = await step('student2@westlake.demo (student)',      () => upsertUser({ email: 'student2@westlake.demo', password: 'LabFlow2025!', role: 'student',      first_name: 'Jordan', last_name: 'Learner' }))
+  const s3Id      = await step('student3@westlake.demo (student)',      () => upsertUser({ email: 'student3@westlake.demo', password: 'LabFlow2025!', role: 'student',      first_name: 'Alex',   last_name: 'Chen' }))
+  const s4Id      = await step('student4@westlake.demo (student)',      () => upsertUser({ email: 'student4@westlake.demo', password: 'LabFlow2025!', role: 'student',      first_name: 'Maya',   last_name: 'Rodriguez' }))
+  const s5Id      = await step('student5@westlake.demo (student)',      () => upsertUser({ email: 'student5@westlake.demo', password: 'LabFlow2025!', role: 'student',      first_name: 'Ethan',  last_name: 'Park' }))
+  const s6Id      = await step('student6@westlake.demo (student)',      () => upsertUser({ email: 'student6@westlake.demo', password: 'LabFlow2025!', role: 'student',      first_name: 'Sofia',  last_name: 'Williams' }))
 
   console.log('\nStep 3: Demo lab content')
   await step('Create demo class',          () => seedClass(teacherId))
@@ -297,14 +378,20 @@ async function main() {
   await step('Create pre-lab questions',   seedPreLabQuestions)
   await step('Create lab steps (1–4)',     seedSteps)
   await step('Assign lab to class',        () => seedAssignment(teacherId))
-  await step('Enroll students in class',   () => seedEnrollments(s1Id, s2Id))
+  await step('Enroll students in class',   () => seedEnrollments([s1Id, s2Id, s3Id, s4Id, s5Id, s6Id]))
+  await step('Seed student run states',    () => seedStudentRunStates([s1Id, s2Id, s3Id, s4Id, s5Id, s6Id]))
 
   console.log('\n✅ Seed complete!\n')
   console.log('Demo accounts:')
+  console.log('  demo@westlake.demo     / LabFlow2025!  (Demo Gateway)')
   console.log('  admin@westlake.demo    / LabFlow2025!  (School Admin)')
   console.log('  teacher@westlake.demo  / LabFlow2025!  (Teacher)')
   console.log('  student1@westlake.demo / LabFlow2025!  (Student)')
-  console.log('  student2@westlake.demo / LabFlow2025!  (Student)\n')
+  console.log('  student2@westlake.demo / LabFlow2025!  (Student)')
+  console.log('  student3@westlake.demo / LabFlow2025!  (Student)')
+  console.log('  student4@westlake.demo / LabFlow2025!  (Student)')
+  console.log('  student5@westlake.demo / LabFlow2025!  (Student)')
+  console.log('  student6@westlake.demo / LabFlow2025!  (Student)\n')
   console.log('Org sign-up code: westlake\n')
 }
 

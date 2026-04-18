@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 import { DEMO_SECTIONS } from './demo-sections'
@@ -14,15 +15,28 @@ import { AdminBrandingSection } from './sections/AdminBrandingSection'
 import { AnalyticsImpactSection } from './sections/AnalyticsImpactSection'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { createClient } from '@/lib/supabase/client'
+import { DEMO_PERSONAS, type DemoPersona } from '@/lib/demo/accounts'
 
 const LAST_SECTION_INDEX = DEMO_SECTIONS.length - 1
 
 export function DemoExperience() {
   // Demo progression is fully local state-driven with timed transitions.
+  const router = useRouter()
   const [sectionIndex, setSectionIndex] = useState(0)
   const [autoplay, setAutoplay] = useState(false)
+  const [switchingId, setSwitchingId] = useState<string | null>(null)
+  const [switchError, setSwitchError] = useState<string | null>(null)
+
+  const [selectedRole, setSelectedRole] = useState<DemoPersona['role']>('student')
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>(
+    DEMO_PERSONAS.find((persona) => persona.role === 'student')?.id ?? ''
+  )
 
   const currentSection = DEMO_SECTIONS[sectionIndex]
+  const personasForRole = DEMO_PERSONAS.filter((persona) => persona.role === selectedRole)
+  const selectedPersona =
+    personasForRole.find((persona) => persona.id === selectedPersonaId) ?? personasForRole[0]
 
   useEffect(() => {
     if (!autoplay) return
@@ -57,9 +71,88 @@ export function DemoExperience() {
     setSectionIndex(0)
   }
 
+  async function handleSwitchDemoUser() {
+    if (!selectedPersona) return
+    setSwitchError(null)
+    setSwitchingId(selectedPersona.id)
+
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email: selectedPersona.email,
+      password: selectedPersona.password,
+    })
+
+    if (error) {
+      setSwitchError(`Could not switch to ${selectedPersona.email}. Check demo seed data.`)
+      setSwitchingId(null)
+      return
+    }
+
+    router.push('/dashboard')
+    router.refresh()
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(14,165,233,0.14),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(20,184,166,0.1),transparent_28%),linear-gradient(to_bottom,#0b1220,#111827_40%,#0b1220)] px-4 py-8 md:px-8 md:py-10">
       <div className="mx-auto max-w-[1300px] space-y-6">
+        <section className="rounded-2xl border border-border/70 bg-card/80 p-4 backdrop-blur">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[190px]">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                DEMO - Switch User
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Pick a role and user persona.
+              </p>
+            </div>
+
+            <label className="min-w-[170px] flex-1 space-y-1">
+              <span className="text-xs text-muted-foreground">Role</span>
+              <select
+                value={selectedRole}
+                onChange={(event) => {
+                  const nextRole = event.target.value as DemoPersona['role']
+                  setSelectedRole(nextRole)
+                  const nextPersona = DEMO_PERSONAS.find((persona) => persona.role === nextRole)
+                  setSelectedPersonaId(nextPersona?.id ?? '')
+                }}
+                className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+              >
+                <option value="school_admin">School Admin</option>
+                <option value="teacher">Teacher</option>
+                <option value="student">Student</option>
+              </select>
+            </label>
+
+            <label className="min-w-[260px] flex-[1.3] space-y-1">
+              <span className="text-xs text-muted-foreground">User</span>
+              <select
+                value={selectedPersona?.id ?? ''}
+                onChange={(event) => setSelectedPersonaId(event.target.value)}
+                className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
+              >
+                {personasForRole.map((persona) => (
+                  <option key={persona.id} value={persona.id}>
+                    {persona.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <Button
+              type="button"
+              className="min-w-[140px]"
+              disabled={!selectedPersona || switchingId !== null}
+              onClick={() => void handleSwitchDemoUser()}
+            >
+              {switchingId ? 'Switching...' : 'Switch User'}
+            </Button>
+          </div>
+          {switchError && (
+            <p className="mt-2 text-xs text-destructive">{switchError}</p>
+          )}
+        </section>
+
         <header className="rounded-2xl border border-border/70 bg-card/80 p-5 backdrop-blur md:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>

@@ -30,6 +30,13 @@ const ORG_ID = 'aaaaaaaa-0000-0000-0000-000000000001'
 
 const DEMO_USERS = [
   {
+    email: 'demo@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'school_admin',
+    first_name: 'Demo',
+    last_name: 'Gateway',
+  },
+  {
     email: 'admin@westlake.demo',
     password: 'LabFlow2025!',
     role: 'school_admin',
@@ -56,6 +63,34 @@ const DEMO_USERS = [
     role: 'student',
     first_name: 'Jordan',
     last_name: 'Learner',
+  },
+  {
+    email: 'student3@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'student',
+    first_name: 'Alex',
+    last_name: 'Chen',
+  },
+  {
+    email: 'student4@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'student',
+    first_name: 'Maya',
+    last_name: 'Rodriguez',
+  },
+  {
+    email: 'student5@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'student',
+    first_name: 'Ethan',
+    last_name: 'Park',
+  },
+  {
+    email: 'student6@westlake.demo',
+    password: 'LabFlow2025!',
+    role: 'student',
+    first_name: 'Sofia',
+    last_name: 'Williams',
   },
 ]
 
