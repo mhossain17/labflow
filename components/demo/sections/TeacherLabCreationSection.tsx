@@ -46,27 +46,27 @@ const PHASE_LABELS: Record<NewLabPhase, string> = {
 }
 
 const PROMPT_TEXT =
-  'A lab where 9th grade chemistry students mix household acids and bases, measure pH changes using litmus paper, and graph their results.'
+  'A lab where 8th grade students investigate how changing one variable affects a measurable outcome, record data across multiple trials, and draw evidence-based conclusions.'
 
 const GENERATED_DRAFT = {
-  title: 'Investigating Acids and Bases Through pH Changes',
+  title: 'Investigating Variables Through Controlled Trials',
   overview:
-    'Students mix common acids and bases, measure pH with indicators, and use data trends to explain neutralization.',
+    'Students design a controlled experiment, collect data across multiple trials, and use evidence to support or revise their initial prediction.',
   objectives: [
-    'Measure pH values for multiple acid/base mixtures.',
-    'Identify neutralization points using observed pH changes.',
-    'Support conclusions with graphed evidence.',
+    'Identify and control variables in an experimental setup.',
+    'Record accurate measurements across repeated trials.',
+    'Support conclusions with data and written reasoning.',
   ],
   materials: [
-    'Beakers (250mL)',
-    'Litmus paper',
-    'Household vinegar',
-    'Baking soda solution',
-    'Dropper pipettes',
-    'Safety goggles',
+    'Lab worksheet (printed or digital)',
+    'Ruler or measuring tape',
+    'Stopwatch or timer',
+    'Data recording sheet',
+    'Graph paper or spreadsheet',
+    'Safety guidelines handout',
   ],
   safetyNotes:
-    'Wear goggles throughout the lab, avoid skin contact with solutions, and dispose of mixtures in the designated sink station.',
+    'Follow all classroom lab protocols, keep your workspace organized, and check equipment before each trial to ensure consistent conditions.',
   rubric: [
     { title: 'Claim and Hypothesis Quality', points: 10 },
     { title: 'Data Collection Accuracy', points: 10 },

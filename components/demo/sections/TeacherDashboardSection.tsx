@@ -121,10 +121,10 @@ export function TeacherDashboardSection() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="size-4 text-primary" />
-                Biology Period 3 • Live Monitor
+                Period 3 • Live Monitor
               </CardTitle>
               <CardDescription className="text-slate-300">
-                Lab: Photosynthesis Through Light Intensity
+                Lab: Investigating Variables Through Controlled Trials
               </CardDescription>
             </div>
             <motion.div

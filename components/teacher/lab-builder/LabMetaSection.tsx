@@ -29,7 +29,7 @@ export function LabMetaSection({ control, register }: LabMetaSectionProps) {
         <Label htmlFor="title">Lab Title <span className="text-destructive">*</span></Label>
         <Input
           id="title"
-          placeholder="e.g. Photosynthesis Rate Lab"
+          placeholder="e.g. Variables and Controlled Trials Lab"
           {...register('title', { required: true })}
         />
       </div>

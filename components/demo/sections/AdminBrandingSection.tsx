@@ -22,7 +22,7 @@ const BRAND_PRESETS: BrandPreset[] = [
     secondary: '#14b8a6',
   },
   {
-    name: 'North Valley Science',
+    name: 'North Valley Academy',
     logo: 'NV',
     primary: '#0ea5e9',
     secondary: '#22c55e',

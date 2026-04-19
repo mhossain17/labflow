@@ -27,7 +27,7 @@ import {
 
 type StudentPhase = 'dashboard' | 'prelab' | 'step1' | 'step2' | 'complete'
 
-const ACTIVE_ASSIGNMENT_ID = 'photosynthesis_lab'
+const ACTIVE_ASSIGNMENT_ID = 'variables_lab'
 
 const PHASE_PROGRESS: Record<StudentPhase, number> = {
   dashboard: 10,

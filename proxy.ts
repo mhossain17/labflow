@@ -15,7 +15,7 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isPublicPath =
     pathname === '/' ||
-    pathname === '/demo' ||
+    pathname.startsWith('/demo') ||
     PUBLIC_PATHS.some((path) => pathname.startsWith(path))
 
   // If no user and accessing protected route → redirect to login

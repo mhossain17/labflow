@@ -174,7 +174,7 @@ export function RubricGradingSection() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-semibold">{DEMO_STUDENT_PROFILE.studentName}</p>
-                  <p className="text-xs text-slate-400">Submitted 1:42 PM • Photosynthesis Lab</p>
+                  <p className="text-xs text-slate-400">Submitted 1:42 PM • Variables Lab</p>
                 </div>
                 <Badge
                   className={

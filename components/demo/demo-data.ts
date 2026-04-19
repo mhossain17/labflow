@@ -45,15 +45,15 @@ export interface DemoFinalGradeSnapshot {
 
 export const DEMO_STUDENT_PROFILE = {
   studentName: 'Avery Johnson',
-  classLabel: 'Biology Period 2',
+  classLabel: 'Period 2',
   teacherName: 'Ms. Rivera',
   classCount: 3,
 }
 
 export const DEMO_STUDENT_ASSIGNMENTS: DemoDashboardAssignment[] = [
   {
-    id: 'photosynthesis_lab',
-    title: 'Investigating Photosynthesis Through Light Intensity',
+    id: 'variables_lab',
+    title: 'Investigating Variables Through Controlled Trials',
     dueText: 'Due today',
     estimatedMinutes: 45,
     status: 'not_started',
@@ -61,8 +61,8 @@ export const DEMO_STUDENT_ASSIGNMENTS: DemoDashboardAssignment[] = [
     totalSteps: 2,
   },
   {
-    id: 'density_review',
-    title: 'Density Lab Review',
+    id: 'measurement_lab',
+    title: 'Measurement and Data Collection Lab',
     dueText: 'Completed last week',
     estimatedMinutes: 30,
     status: 'complete',
@@ -70,8 +70,8 @@ export const DEMO_STUDENT_ASSIGNMENTS: DemoDashboardAssignment[] = [
     totalSteps: 3,
   },
   {
-    id: 'enzyme_activity',
-    title: 'Enzyme Activity Factors',
+    id: 'cause_effect_lab',
+    title: 'Cause and Effect: Analyzing Results',
     dueText: 'Due Friday',
     estimatedMinutes: 40,
     status: 'not_started',
@@ -82,12 +82,12 @@ export const DEMO_STUDENT_ASSIGNMENTS: DemoDashboardAssignment[] = [
 
 export const DEMO_PRELAB_ITEMS: DemoPreLabItem[] = [
   {
-    question: 'Explain photosynthesis in one sentence.',
-    answer: 'Photosynthesis converts light energy into chemical energy stored in glucose.',
+    question: 'Describe what an independent variable is in your own words.',
+    answer: 'An independent variable is the one factor you intentionally change to see how it affects the outcome.',
   },
   {
-    question: 'Predict what happens to oxygen output as light gets closer.',
-    answer: 'I predict oxygen bubble count increases as the light source moves closer to the plant.',
+    question: 'What do you predict will happen as the independent variable increases?',
+    answer: 'I predict the measured output will increase proportionally as the independent variable increases.',
   },
 ]
 
@@ -96,21 +96,21 @@ export const DEMO_STEP_ENTRIES: DemoStepEntry[] = [
     stepNumber: 1,
     title: 'Baseline Measurement',
     dataFields: [
-      { label: 'Light Distance (cm)', value: '20' },
-      { label: 'Bubble Count (1 min)', value: '14' },
+      { label: 'Trial Distance (cm)', value: '20' },
+      { label: 'Data Count (avg)', value: '14' },
     ],
     reflection:
-      'At 20cm, photosynthesis is active but moderate. The bubble count gives us a clear baseline.',
+      'At the baseline setting, the output was moderate and consistent. This gives us a reliable control point for comparison.',
   },
   {
     stepNumber: 2,
-    title: 'Close-Light Trial',
+    title: 'Variable Trial',
     dataFields: [
-      { label: 'Light Distance (cm)', value: '10' },
-      { label: 'Bubble Count (1 min)', value: '24' },
+      { label: 'Trial Distance (cm)', value: '10' },
+      { label: 'Data Count (avg)', value: '24' },
     ],
     reflection:
-      'At 10cm, oxygen production increased, supporting the prediction that higher light intensity boosts photosynthesis rate.',
+      'When the variable changed, the measured output increased noticeably, supporting our prediction that the two are positively correlated.',
   },
 ]
 

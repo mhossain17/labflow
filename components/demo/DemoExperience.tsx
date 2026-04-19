@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 import { DEMO_SECTIONS } from './demo-sections'
 import { IntroLandingSection } from './sections/IntroLandingSection'
 import { TeacherLabCreationSection } from './sections/TeacherLabCreationSection'
@@ -15,28 +16,14 @@ import { AdminBrandingSection } from './sections/AdminBrandingSection'
 import { AnalyticsImpactSection } from './sections/AnalyticsImpactSection'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { createClient } from '@/lib/supabase/client'
-import { DEMO_PERSONAS, type DemoPersona } from '@/lib/demo/accounts'
 
 const LAST_SECTION_INDEX = DEMO_SECTIONS.length - 1
 
 export function DemoExperience() {
-  // Demo progression is fully local state-driven with timed transitions.
-  const router = useRouter()
   const [sectionIndex, setSectionIndex] = useState(0)
   const [autoplay, setAutoplay] = useState(false)
-  const [switchingId, setSwitchingId] = useState<string | null>(null)
-  const [switchError, setSwitchError] = useState<string | null>(null)
-
-  const [selectedRole, setSelectedRole] = useState<DemoPersona['role']>('student')
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string>(
-    DEMO_PERSONAS.find((persona) => persona.role === 'student')?.id ?? ''
-  )
 
   const currentSection = DEMO_SECTIONS[sectionIndex]
-  const personasForRole = DEMO_PERSONAS.filter((persona) => persona.role === selectedRole)
-  const selectedPersona =
-    personasForRole.find((persona) => persona.id === selectedPersonaId) ?? personasForRole[0]
 
   useEffect(() => {
     if (!autoplay) return
@@ -57,6 +44,7 @@ export function DemoExperience() {
 
   function handleStartDemo() {
     setSectionIndex(1)
+    setAutoplay(true)
   }
 
   function handleNextStep() {
@@ -71,130 +59,99 @@ export function DemoExperience() {
     setSectionIndex(0)
   }
 
-  async function handleSwitchDemoUser() {
-    if (!selectedPersona) return
-    setSwitchError(null)
-    setSwitchingId(selectedPersona.id)
-
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email: selectedPersona.email,
-      password: selectedPersona.password,
-    })
-
-    if (error) {
-      setSwitchError(`Could not switch to ${selectedPersona.email}. Check demo seed data.`)
-      setSwitchingId(null)
-      return
-    }
-
-    router.push('/dashboard')
-    router.refresh()
-  }
-
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(14,165,233,0.14),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(20,184,166,0.1),transparent_28%),linear-gradient(to_bottom,#0b1220,#111827_40%,#0b1220)] px-4 py-8 md:px-8 md:py-10">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(220,38,38,0.12),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(180,0,0,0.08),transparent_28%),linear-gradient(to_bottom,#000000,#111111_40%,#000000)] px-4 py-8 md:px-8 md:py-10">
       <div className="mx-auto max-w-[1300px] space-y-6">
-        <section className="rounded-2xl border border-border/70 bg-card/80 p-4 backdrop-blur">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-[190px]">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                DEMO - Switch User
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Pick a role and user persona.
-              </p>
-            </div>
 
-            <label className="min-w-[170px] flex-1 space-y-1">
-              <span className="text-xs text-muted-foreground">Role</span>
-              <select
-                value={selectedRole}
-                onChange={(event) => {
-                  const nextRole = event.target.value as DemoPersona['role']
-                  setSelectedRole(nextRole)
-                  const nextPersona = DEMO_PERSONAS.find((persona) => persona.role === nextRole)
-                  setSelectedPersonaId(nextPersona?.id ?? '')
-                }}
-                className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
-              >
-                <option value="school_admin">School Admin</option>
-                <option value="teacher">Teacher</option>
-                <option value="student">Student</option>
-              </select>
-            </label>
+        {/* Top navigation bar */}
+        <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-3.5 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2 text-white/70 transition-colors hover:text-white">
+              <Image src="/icon.svg" alt="LabFlow" width={28} height={28} className="h-7 w-7 rounded-md" />
+              <span className="text-sm font-semibold tracking-tight">LabFlow</span>
+            </Link>
+            <span className="text-white/30">/</span>
+            <span className="text-sm font-medium text-white/60">Interactive Demo</span>
+          </div>
 
-            <label className="min-w-[260px] flex-[1.3] space-y-1">
-              <span className="text-xs text-muted-foreground">User</span>
-              <select
-                value={selectedPersona?.id ?? ''}
-                onChange={(event) => setSelectedPersonaId(event.target.value)}
-                className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm"
-              >
-                {personasForRole.map((persona) => (
-                  <option key={persona.id} value={persona.id}>
-                    {persona.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
+          <div className="flex items-center gap-2">
             <Button
-              type="button"
-              className="min-w-[140px]"
-              disabled={!selectedPersona || switchingId !== null}
-              onClick={() => void handleSwitchDemoUser()}
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-white/60 hover:text-white hover:bg-white/10"
+              render={<Link href="/" />}
             >
-              {switchingId ? 'Switching...' : 'Switch User'}
+              <ArrowLeft className="size-3.5" />
+              Back to Home
+            </Button>
+            <Button
+              size="sm"
+              className="gap-1.5 bg-red-600 hover:bg-red-700 text-white border-0"
+              render={<Link href="/demo/try" />}
+            >
+              Try it Live
+              <ArrowRight className="size-3.5" />
             </Button>
           </div>
-          {switchError && (
-            <p className="mt-2 text-xs text-destructive">{switchError}</p>
-          )}
-        </section>
+        </header>
 
-        <header className="rounded-2xl border border-border/70 bg-card/80 p-5 backdrop-blur md:p-6">
+        {/* Demo header / controls */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur md:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                LabFlow AI Demo Mode
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-red-400">
+                Guided Walkthrough
               </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
-                Guided Interactive Walkthrough
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-white md:text-3xl">
+                LabFlow in Action
               </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {implementedCount} of {DEMO_SECTIONS.length} sections are fully interactive with
-                simulated workflows, transitions, and presentation-ready storytelling.
+              <p className="mt-2 text-sm text-white/50">
+                {implementedCount} interactive sections — teacher, student, and admin workflows.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <label className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+              <label className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/70">
                 <Switch checked={autoplay} onCheckedChange={setAutoplay} />
                 Autoplay
               </label>
-              <Button variant="outline" className="gap-1.5" onClick={() => setAutoplay((v) => !v)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-white/15 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                onClick={() => setAutoplay((v) => !v)}
+              >
                 {autoplay ? <Pause className="size-4" /> : <Play className="size-4" />}
                 {autoplay ? 'Pause' : 'Play'}
               </Button>
-              <Button variant="outline" className="gap-1.5" onClick={handleReset}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-white/15 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                onClick={handleReset}
+              >
                 <RotateCcw className="size-4" />
                 Reset
               </Button>
-              <Button className="gap-1.5" onClick={handleNextStep}>
+              <Button
+                size="sm"
+                className="gap-1.5 bg-red-600 hover:bg-red-700 text-white border-0"
+                onClick={handleNextStep}
+              >
                 <SkipForward className="size-4" />
                 Next Step
               </Button>
             </div>
           </div>
-        </header>
+        </div>
 
-        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="rounded-2xl border border-border/70 bg-card/75 p-4 backdrop-blur">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+          {/* Timeline sidebar */}
+          <aside className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">
               Demo Timeline
             </h2>
-            <ol className="space-y-2">
+            <ol className="space-y-1.5">
               {DEMO_SECTIONS.map((section, index) => {
                 const isActive = index === sectionIndex
                 const isPast = index < sectionIndex
@@ -203,26 +160,28 @@ export function DemoExperience() {
                     <button
                       type="button"
                       onClick={() => setSectionIndex(index)}
-                      className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${
+                      className={`w-full rounded-xl border px-3 py-2.5 text-left transition-all ${
                         isActive
-                          ? 'border-primary bg-primary/10'
+                          ? 'border-red-500/50 bg-red-500/10'
                           : isPast
-                            ? 'border-border bg-muted/40'
-                            : 'border-border/70 bg-background/80 hover:bg-muted/30'
+                            ? 'border-white/10 bg-white/5 opacity-60'
+                            : 'border-white/8 bg-white/3 hover:bg-white/8 opacity-80 hover:opacity-100'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <p className="text-xs font-medium text-muted-foreground">
+                          <p className={`text-xs font-medium ${isActive ? 'text-red-400' : 'text-white/40'}`}>
                             {section.label}
                           </p>
-                          <p className="text-sm font-semibold leading-tight">{section.title}</p>
+                          <p className={`text-sm font-semibold leading-tight ${isActive ? 'text-white' : 'text-white/70'}`}>
+                            {section.title}
+                          </p>
                         </div>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
                             section.implemented
-                              ? 'bg-green-500/15 text-green-700 dark:text-green-400'
-                              : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                              ? 'bg-emerald-500/15 text-emerald-400'
+                              : 'bg-amber-500/15 text-amber-400'
                           }`}
                         >
                           {section.implemented ? 'Live' : 'Scaffold'}
@@ -235,6 +194,7 @@ export function DemoExperience() {
             </ol>
           </aside>
 
+          {/* Main content */}
           <div className="min-w-0">
             <AnimatePresence mode="wait">
               <motion.div
@@ -256,6 +216,29 @@ export function DemoExperience() {
             </AnimatePresence>
           </div>
         </div>
+
+        {/* Bottom CTA */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur">
+          <p className="text-sm font-medium text-white/60">Ready to explore the real app?</p>
+          <p className="mt-1 text-lg font-semibold text-white">Log in as a teacher, student, or admin — no setup needed.</p>
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white border-0"
+              render={<Link href="/demo/try" />}
+            >
+              Try it Live
+              <ArrowRight className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="border-white/15 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+              render={<Link href="/" />}
+            >
+              Back to Home
+            </Button>
+          </div>
+        </div>
+
       </div>
     </main>
   )

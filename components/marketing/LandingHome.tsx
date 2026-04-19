@@ -10,7 +10,7 @@ import {
   BarChart3,
   CheckCircle2,
   Clock3,
-  FlaskConical,
+  ClipboardList,
   ShieldCheck,
   Sparkles,
   TrendingUp,
@@ -39,7 +39,7 @@ const FEATURE_CARDS: Array<{
     title: 'Guide Every Student Step',
     description: 'Students move through pre-lab, data collection, and reflection in one workflow.',
     detail: 'Every response is saved to the run so evidence and writing stay organized.',
-    icon: FlaskConical,
+    icon: ClipboardList,
   },
   {
     title: 'Intervene In Real Time',
@@ -95,13 +95,13 @@ const LIVE_TABS: Array<{ id: LiveTabId; label: string; description: string }> = 
 ]
 
 const MONITOR_STUDENTS = ['Avery Johnson', 'Noah Patel', 'Emma Collins', 'Liam Brooks']
-const STUDENT_STEPS = ['Pre-Lab', 'Step 1 Data', 'Step 2 Data', 'Reflection']
+const STUDENT_STEPS = ['Pre-Lab', 'Step 1', 'Step 2', 'Reflection']
 const ANALYTICS_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Today']
 
 const STATUS_CLASS: Record<MonitorStatus, string> = {
-  on_track: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  needs_help: 'border-amber-200 bg-amber-50 text-amber-700',
-  stuck: 'border-rose-200 bg-rose-50 text-rose-700',
+  on_track: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400',
+  needs_help: 'border-amber-500/40 bg-amber-500/10 text-amber-400',
+  stuck: 'border-rose-500/40 bg-rose-500/10 text-rose-400',
 }
 
 const STATUS_LABEL: Record<MonitorStatus, string> = {
@@ -121,7 +121,6 @@ export function LandingHome() {
         return LIVE_TABS[(index + 1) % LIVE_TABS.length].id
       })
     }, 7000)
-
     return () => window.clearInterval(timerId)
   }, [])
 
@@ -129,7 +128,6 @@ export function LandingHome() {
     const timerId = window.setInterval(() => {
       setLiveTick((value) => value + 1)
     }, 1900)
-
     return () => window.clearInterval(timerId)
   }, [])
 
@@ -140,10 +138,8 @@ export function LandingHome() {
         let status: MonitorStatus = 'on_track'
         if (cycle > 6) status = 'needs_help'
         if (cycle > 8) status = 'stuck'
-
         const step = 2 + ((liveTick + index) % 3)
         const progress = Math.min(100, 36 + step * 13 + ((liveTick + index * 3) % 16))
-
         return { name, status, step, progress }
       }),
     [liveTick]
@@ -161,7 +157,7 @@ export function LandingHome() {
   const studentStepIndex = liveTick % STUDENT_STEPS.length
   const studentProgress = Math.min(98, 24 + studentStepIndex * 23 + ((liveTick + 1) % 5) * 4)
   const reflectionSeed =
-    'Our evidence shows oxygen production increased as the lamp moved closer, which supports the hypothesis.'
+    'The results supported our prediction — as the variable changed, the measured output shifted consistently across all trials.'
   const reflectionLength = Math.min(reflectionSeed.length, 28 + (liveTick % 8) * 10)
   const reflectionPreview = reflectionSeed.slice(0, reflectionLength)
 
@@ -181,110 +177,106 @@ export function LandingHome() {
   const interventionAlerts = 2 + ((liveTick + 2) % 3)
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,#1e293b_0%,#0b1220_42%,#020617_100%)] text-slate-100">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl"
-          animate={{ y: [0, -14, 0], opacity: [0.45, 0.7, 0.45] }}
-          transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute right-0 top-24 h-80 w-80 rounded-full bg-sky-500/18 blur-3xl"
-          animate={{ y: [0, 16, 0], opacity: [0.35, 0.6, 0.35] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
-        />
-      </div>
+    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_30%_0%,rgba(220,38,38,0.15),transparent_40%),linear-gradient(to_bottom,#000000,#0d0d0d_50%,#000000)] text-white">
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
-        <header className="mb-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-sky-100 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+      {/* Nav */}
+      <div className="relative mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
+        <header className="mb-12 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-3.5 backdrop-blur">
           <Link href="/" className="inline-flex items-center gap-2">
-            <Image
-              src="/icon.svg"
-              alt="LabFlow logo"
-              width={36}
-              height={36}
-              className="h-9 w-9 rounded-lg"
-            />
-            <span className="text-lg font-semibold tracking-tight">LabFlow</span>
+            <Image src="/icon.svg" alt="LabFlow logo" width={30} height={30} className="h-[30px] w-[30px] rounded-md" />
+            <span className="text-base font-semibold tracking-tight">LabFlow</span>
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="#features"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+            <a href="#features" className="text-sm font-medium text-white/50 transition-colors hover:text-white">Features</a>
+            <a href="#preview" className="text-sm font-medium text-white/50 transition-colors hover:text-white">Live Views</a>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="border border-white/15 bg-transparent text-white/70 hover:bg-white/8 hover:text-white"
+              render={<Link href="/demo" />}
             >
-              Features
-            </a>
-            <a
-              href="#preview"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+              Watch Demo
+            </Button>
+            <Button
+              size="sm"
+              className="bg-red-600 hover:bg-red-700 text-white border-0"
+              render={<Link href="/demo/try" />}
             >
-              Live Views
-            </a>
-            <Button variant="outline" render={<Link href="/demo" />}>
-              Watch Full Demo
+              Try it Live
             </Button>
           </div>
         </header>
 
-        <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        {/* Hero */}
+        <section className="grid gap-10 pb-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: 'easeOut' }}
-            className="rounded-3xl border border-sky-100 bg-white/78 p-6 shadow-xl shadow-sky-900/5 backdrop-blur sm:p-8"
           >
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-sky-700">
+            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-red-400">
               Classroom Lab Manager
             </p>
-            <h1 className="text-balance font-['Iowan_Old_Style','Palatino_Linotype','Book_Antiqua',serif] text-4xl leading-tight font-semibold text-slate-900 sm:text-5xl">
-              One place to plan, run, monitor, and assess science labs.
+            <h1 className="text-balance font-['Iowan_Old_Style','Palatino_Linotype','Book_Antiqua',serif] text-5xl font-bold leading-[1.08] text-white sm:text-6xl">
+              One place to plan, run, monitor, and assess classroom labs.
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              LabFlow helps schools run stronger lab instruction by combining AI lab creation,
-              student workflow support, real-time classroom monitoring, and performance analytics
-              into a single platform.
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/55">
+              LabFlow gives teachers, students, and school admins a single platform for AI-assisted lab creation, guided student workflows, live classroom monitoring, and performance analytics.
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Button size="lg" render={<Link href="/demo" />}>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button
+                size="lg"
+                className="bg-red-600 hover:bg-red-700 text-white border-0 gap-2"
+                render={<Link href="/demo" />}
+              >
                 See Interactive Demo
                 <ArrowRight className="size-4" />
               </Button>
-              <Button variant="outline" size="lg" render={<a href="#preview" />}>
-                Explore Live Views
+              <Button
+                variant="ghost"
+                size="lg"
+                className="border border-white/20 bg-transparent text-white/70 hover:bg-white/8 hover:text-white"
+                render={<Link href="/demo/try" />}
+              >
+                Try it Live
               </Button>
             </div>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {IMPACT_POINTS.map((item) => (
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              {IMPACT_POINTS.map((item, index) => (
                 <motion.article
                   key={item.label}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: 'easeOut', delay: 0.2 + index * 0.07 }}
                   whileHover={{ y: -2 }}
-                  className="rounded-2xl border border-slate-200 bg-white/85 p-4"
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
                 >
-                  <item.icon className="size-4 text-sky-700" />
-                  <p className="mt-2 text-sm font-medium text-slate-600">{item.label}</p>
-                  <p className="text-2xl font-semibold text-slate-900">{item.value}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.note}</p>
+                  <item.icon className="size-4 text-red-500" />
+                  <p className="mt-2.5 text-sm font-medium text-white/60">{item.label}</p>
+                  <p className="text-2xl font-bold text-white">{item.value}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-white/40">{item.note}</p>
                 </motion.article>
               ))}
             </div>
           </motion.div>
 
+          {/* Login */}
           <motion.div
             id="login"
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.15 }}
-            className="space-y-4 lg:sticky lg:top-6"
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.18 }}
+            className="space-y-3 lg:sticky lg:top-6"
           >
-            <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50 p-4">
-              <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-900">
-                <BarChart3 className="size-4" />
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+              <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-white">
+                <BarChart3 className="size-4 text-red-500" />
                 Live Classroom Platform
               </p>
-              <p className="mt-1 text-sm text-sky-800/80">
+              <p className="mt-1 text-sm text-white/50">
                 Sign in to continue with your classes, labs, and student progress.
               </p>
             </div>
@@ -292,20 +284,20 @@ export function LandingHome() {
             <LoginBox
               title="Sign In To LabFlow"
               description="Use your existing school account credentials."
-              forceBlackText
-              className="max-w-none border-slate-200/90 bg-white/90 shadow-xl shadow-sky-900/10 backdrop-blur"
+              className="max-w-none"
             />
           </motion.div>
         </section>
 
-        <section id="features" className="mt-16 space-y-4">
+        {/* Features */}
+        <section id="features" className="mt-20 space-y-6 pb-4">
           <div className="max-w-3xl">
-            <h2 className="font-['Iowan_Old_Style','Palatino_Linotype','Book_Antiqua',serif] text-3xl font-semibold text-slate-100 sm:text-4xl">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-red-400">Features</p>
+            <h2 className="font-['Iowan_Old_Style','Palatino_Linotype','Book_Antiqua',serif] text-4xl font-bold text-white sm:text-5xl">
               What LabFlow does for your classroom
             </h2>
-            <p className="mt-3 text-slate-300">
-              Designed for teachers, students, and school admins who need clear lab workflows and
-              better visibility into student progress.
+            <p className="mt-4 text-lg text-white/50">
+              Designed for teachers, students, and school admins who need clear lab workflows and better visibility into student progress.
             </p>
           </div>
 
@@ -316,33 +308,28 @@ export function LandingHome() {
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.45, ease: 'easeOut', delay: index * 0.05 }}
-                className="rounded-2xl border border-slate-200 bg-white/85 p-5 shadow-sm"
+                transition={{ duration: 0.45, ease: 'easeOut', delay: index * 0.06 }}
+                className="rounded-2xl border border-white/10 bg-white/[0.04] p-6"
               >
-                <feature.icon className="size-5 text-sky-700" />
-                <h3 className="mt-3 text-lg font-semibold text-slate-900">{feature.title}</h3>
-                <p className="mt-1 text-sm text-slate-600">{feature.description}</p>
-                <p className="mt-3 text-sm leading-relaxed text-slate-500">{feature.detail}</p>
+                <feature.icon className="size-5 text-red-500" />
+                <h3 className="mt-4 text-lg font-semibold text-white">{feature.title}</h3>
+                <p className="mt-1.5 text-sm text-white/60">{feature.description}</p>
+                <p className="mt-3 text-sm leading-relaxed text-white/40">{feature.detail}</p>
               </motion.article>
             ))}
           </div>
         </section>
 
-        <section
-          id="preview"
-          className="mt-16 rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-xl shadow-sky-900/5 sm:p-7"
-        >
+        {/* Live Views */}
+        <section id="preview" className="mt-20 mb-20 rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sky-700">
-                Live Views
-              </p>
-              <h2 className="mt-1 font-['Iowan_Old_Style','Palatino_Linotype','Book_Antiqua',serif] text-3xl font-semibold text-slate-900">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-red-400">Live Views</p>
+              <h2 className="font-['Iowan_Old_Style','Palatino_Linotype','Book_Antiqua',serif] text-3xl font-bold text-white sm:text-4xl">
                 Real-time previews of how the app works
               </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                These views animate automatically to show the same types of flows teachers and
-                students see inside LabFlow.
+              <p className="mt-2 text-sm text-white/50">
+                These views animate automatically to show the flows teachers and students see inside LabFlow.
               </p>
             </div>
 
@@ -352,10 +339,10 @@ export function LandingHome() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all ${
                     activeTab === tab.id
-                      ? 'border-sky-500 bg-sky-500 text-white'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'border-red-500/50 bg-red-600 text-white'
+                      : 'border-white/15 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   {tab.label}
@@ -364,11 +351,11 @@ export function LandingHome() {
             </div>
           </div>
 
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-white/40">
             {LIVE_TABS.find((tab) => tab.id === activeTab)?.description}
           </p>
 
-          <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4 sm:p-5">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -380,21 +367,17 @@ export function LandingHome() {
                 {activeTab === 'teacher_monitor' && (
                   <div className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                        <p className="text-xs text-emerald-700">On Track</p>
-                        <p className="text-2xl font-semibold text-emerald-800">
-                          {monitorCounts.onTrack}
-                        </p>
+                      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/8 p-3">
+                        <p className="text-xs text-emerald-400">On Track</p>
+                        <p className="text-2xl font-bold text-white">{monitorCounts.onTrack}</p>
                       </div>
-                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                        <p className="text-xs text-amber-700">Needs Help</p>
-                        <p className="text-2xl font-semibold text-amber-800">
-                          {monitorCounts.needsHelp}
-                        </p>
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 p-3">
+                        <p className="text-xs text-amber-400">Needs Help</p>
+                        <p className="text-2xl font-bold text-white">{monitorCounts.needsHelp}</p>
                       </div>
-                      <div className="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                        <p className="text-xs text-rose-700">Stuck</p>
-                        <p className="text-2xl font-semibold text-rose-800">{monitorCounts.stuck}</p>
+                      <div className="rounded-xl border border-rose-500/30 bg-rose-500/8 p-3">
+                        <p className="text-xs text-rose-400">Stuck</p>
+                        <p className="text-2xl font-bold text-white">{monitorCounts.stuck}</p>
                       </div>
                     </div>
 
@@ -404,26 +387,22 @@ export function LandingHome() {
                           key={row.name}
                           layout
                           transition={{ duration: 0.25 }}
-                          className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                          className="rounded-xl border border-white/10 bg-white/[0.04] p-3"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <p className="text-sm font-semibold text-slate-900">{row.name}</p>
-                              <p className="text-xs text-slate-500">Step {row.step} of 5</p>
+                              <p className="text-sm font-semibold text-white">{row.name}</p>
+                              <p className="text-xs text-white/40">Step {row.step} of 5</p>
                             </div>
-                            <span
-                              className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
-                                STATUS_CLASS[row.status]
-                              }`}
-                            >
+                            <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[row.status]}`}>
                               {STATUS_LABEL[row.status]}
                             </span>
                           </div>
-                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${row.progress}%` }}
-                              className="h-full rounded-full bg-sky-500"
+                              className="h-full rounded-full bg-red-500"
                             />
                           </div>
                         </motion.article>
@@ -434,11 +413,9 @@ export function LandingHome() {
 
                 {activeTab === 'student_runner' && (
                   <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="text-sm font-semibold text-slate-900">
-                        Photosynthesis Lab Assignment
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                      <p className="text-sm font-semibold text-white">Current Lab Assignment</p>
+                      <p className="mt-1 text-xs text-white/40">
                         Progress updates as the student completes each step.
                       </p>
 
@@ -451,10 +428,10 @@ export function LandingHome() {
                               key={step}
                               className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
                                 isComplete
-                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
                                   : isActive
-                                    ? 'border-sky-200 bg-sky-50 text-sky-700'
-                                    : 'border-slate-200 bg-white text-slate-500'
+                                    ? 'border-red-500/40 bg-red-500/10 text-red-400'
+                                    : 'border-white/10 bg-white/5 text-white/40'
                               }`}
                             >
                               {isComplete && <CheckCircle2 className="mr-1 inline size-3" />}
@@ -465,43 +442,39 @@ export function LandingHome() {
                       </div>
 
                       <div className="mt-4">
-                        <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                        <div className="mb-1 flex items-center justify-between text-xs text-white/40">
                           <span>Submission Progress</span>
                           <span>{studentProgress}%</span>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                        <div className="h-2 overflow-hidden rounded-full bg-white/10">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${studentProgress}%` }}
-                            className="h-full rounded-full bg-cyan-500"
+                            className="h-full rounded-full bg-red-500"
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-white/40">
                         Live Student Entry
                       </p>
                       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5">
-                          <p className="text-[11px] text-slate-500">Light Distance (cm)</p>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {12 - (liveTick % 3)}
-                          </p>
+                        <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
+                          <p className="text-[11px] text-white/40">Trial Distance (cm)</p>
+                          <p className="text-sm font-semibold text-white">{12 - (liveTick % 3)}</p>
                         </div>
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5">
-                          <p className="text-[11px] text-slate-500">Bubble Count / min</p>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {18 + ((liveTick + 2) % 6)}
-                          </p>
+                        <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
+                          <p className="text-[11px] text-white/40">Data Count (avg)</p>
+                          <p className="text-sm font-semibold text-white">{18 + ((liveTick + 2) % 6)}</p>
                         </div>
                       </div>
-                      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-[11px] text-slate-500">Reflection</p>
-                        <p className="mt-1 min-h-14 text-sm leading-relaxed text-slate-700">
+                      <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                        <p className="text-[11px] text-white/40">Reflection</p>
+                        <p className="mt-1 min-h-14 text-sm leading-relaxed text-white/70">
                           {reflectionPreview}
-                          <span className="inline-block h-4 w-1 animate-pulse rounded bg-slate-400/70 align-[-2px]" />
+                          <span className="inline-block h-4 w-1 animate-pulse rounded bg-white/30 align-[-2px]" />
                         </p>
                       </div>
                     </div>
@@ -510,44 +483,36 @@ export function LandingHome() {
 
                 {activeTab === 'analytics' && (
                   <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="text-sm font-semibold text-slate-900">
-                        Weekly Completion Trend
-                      </p>
+                    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                      <p className="text-sm font-semibold text-white">Weekly Completion Trend</p>
                       <div className="mt-4 flex h-44 items-end gap-2">
                         {analyticsBars.map((bar) => (
                           <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
-                            <div className="relative flex h-36 w-full items-end rounded-md bg-slate-100">
+                            <div className="relative flex h-36 w-full items-end rounded-md bg-white/8">
                               <motion.div
                                 initial={{ height: 0 }}
                                 animate={{ height: `${bar.value}%` }}
-                                className="w-full rounded-md bg-gradient-to-t from-sky-500 to-cyan-400"
+                                className="w-full rounded-md bg-gradient-to-t from-red-600 to-red-400"
                               />
                             </div>
-                            <span className="text-xs text-slate-500">{bar.label}</span>
+                            <span className="text-xs text-white/40">{bar.label}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     <div className="grid gap-3">
-                      <div className="rounded-xl border border-slate-200 bg-white p-4">
-                        <p className="text-xs text-slate-500">Average Completion</p>
-                        <p className="mt-1 text-3xl font-semibold text-slate-900">
-                          {avgCompletion}%
-                        </p>
+                      <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                        <p className="text-xs text-white/40">Average Completion</p>
+                        <p className="mt-1 text-3xl font-bold text-white">{avgCompletion}%</p>
                       </div>
-                      <div className="rounded-xl border border-slate-200 bg-white p-4">
-                        <p className="text-xs text-slate-500">Feedback Turnaround</p>
-                        <p className="mt-1 text-3xl font-semibold text-slate-900">
-                          {avgFeedbackTurnaround} min
-                        </p>
+                      <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                        <p className="text-xs text-white/40">Feedback Turnaround</p>
+                        <p className="mt-1 text-3xl font-bold text-white">{avgFeedbackTurnaround} min</p>
                       </div>
-                      <div className="rounded-xl border border-slate-200 bg-white p-4">
-                        <p className="text-xs text-slate-500">Current Intervention Alerts</p>
-                        <p className="mt-1 text-3xl font-semibold text-slate-900">
-                          {interventionAlerts}
-                        </p>
+                      <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                        <p className="text-xs text-white/40">Intervention Alerts</p>
+                        <p className="mt-1 text-3xl font-bold text-white">{interventionAlerts}</p>
                       </div>
                     </div>
                   </div>
