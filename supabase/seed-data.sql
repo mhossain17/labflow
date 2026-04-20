@@ -49,6 +49,32 @@ INSERT INTO public.classes (
   false
 ) ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO public.class_teachers (
+  class_id,
+  teacher_id,
+  class_role,
+  can_manage_roster,
+  can_manage_assignments,
+  can_manage_grades,
+  can_edit_class_settings,
+  added_by
+) VALUES (
+  'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
+  'TEACHER_ID_PLACEHOLDER'::uuid,
+  'lead_teacher',
+  true,
+  true,
+  true,
+  true,
+  'TEACHER_ID_PLACEHOLDER'::uuid
+) ON CONFLICT (class_id, teacher_id) DO UPDATE
+SET
+  class_role = 'lead_teacher',
+  can_manage_roster = true,
+  can_manage_assignments = true,
+  can_manage_grades = true,
+  can_edit_class_settings = true;
+
 -- ============================================================
 -- DEMO LAB: Measuring the Density of Water
 -- ============================================================

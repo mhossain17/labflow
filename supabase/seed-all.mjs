@@ -142,6 +142,18 @@ async function seedClass(teacherId) {
     archived: false
   }, { onConflict: 'id' })
   if (error) throw error
+
+  const { error: membershipError } = await supabase.from('class_teachers').upsert({
+    class_id: CLASS_ID,
+    teacher_id: teacherId,
+    class_role: 'lead_teacher',
+    can_manage_roster: true,
+    can_manage_assignments: true,
+    can_manage_grades: true,
+    can_edit_class_settings: true,
+    added_by: teacherId,
+  }, { onConflict: 'class_id,teacher_id' })
+  if (membershipError) throw membershipError
 }
 
 // ─── 5. Lab ───────────────────────────────────────────────────

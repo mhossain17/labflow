@@ -156,6 +156,20 @@ async function main() {
     }, { onConflict: 'id' })
     if (error) throw error
   })
+  await step('Teacher class memberships', async () => {
+    const rows = [CLASS1_ID, CLASS2_ID, CLASS3_ID].map((classId) => ({
+      class_id: classId,
+      teacher_id: teacherId,
+      class_role: 'lead_teacher',
+      can_manage_roster: true,
+      can_manage_assignments: true,
+      can_manage_grades: true,
+      can_edit_class_settings: true,
+      added_by: teacherId,
+    }))
+    const { error } = await supabase.from('class_teachers').upsert(rows, { onConflict: 'class_id,teacher_id' })
+    if (error) throw error
+  })
 
   // ── Step 3: enrollments ──
   console.log('\nStep 3: Enrollments')

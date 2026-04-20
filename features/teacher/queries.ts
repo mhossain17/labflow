@@ -1,15 +1,39 @@
 import { createClient } from '@/lib/supabase/server'
 
+function isMissingClassTeachersRelation(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const message = (error as { message?: string }).message?.toLowerCase() ?? ''
+  const details = (error as { details?: string }).details?.toLowerCase() ?? ''
+  const hint = (error as { hint?: string }).hint?.toLowerCase() ?? ''
+  return [message, details, hint].some((value) => value.includes('class_teachers'))
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getTeacherClassIds(db: any, teacherId: string) {
+  const [{ data: memberships }, { data: ownedClasses }] = await Promise.all([
+    db.from('class_teachers').select('class_id').eq('teacher_id', teacherId),
+    db.from('classes').select('id').eq('teacher_id', teacherId),
+  ])
+
+  const classIds = new Set<string>()
+
+  for (const membership of memberships ?? []) {
+    if (membership.class_id) classIds.add(membership.class_id)
+  }
+
+  for (const ownedClass of ownedClasses ?? []) {
+    if (ownedClass.id) classIds.add(ownedClass.id)
+  }
+
+  return [...classIds]
+}
+
 export async function listClassesByTeacher(teacherId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  // Query via class_teachers junction so co-teachers also see their classes
-  const { data: memberships } = await db
-    .from('class_teachers')
-    .select('class_id, class_role')
-    .eq('teacher_id', teacherId)
-  const classIds = (memberships ?? []).map((m: { class_id: string }) => m.class_id)
+  // Supports both class_teachers memberships and legacy classes.teacher_id ownership.
+  const classIds = await getTeacherClassIds(db, teacherId)
   if (classIds.length === 0) return []
   const { data } = await db
     .from('classes')
@@ -24,20 +48,40 @@ export async function getTeacherPermissionsForClass(teacherId: string, classId: 
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  const { data } = await db
+  const { data: membership } = await db
     .from('class_teachers')
     .select('id, class_role, can_manage_roster, can_manage_assignments, can_manage_grades, can_edit_class_settings')
     .eq('teacher_id', teacherId)
     .eq('class_id', classId)
     .maybeSingle()
-  return data
+
+  if (membership) return membership
+
+  const { data: cls } = await db
+    .from('classes')
+    .select('teacher_id')
+    .eq('id', classId)
+    .maybeSingle()
+
+  if (cls?.teacher_id === teacherId) {
+    return {
+      id: null,
+      class_role: 'lead_teacher',
+      can_manage_roster: true,
+      can_manage_assignments: true,
+      can_manage_grades: true,
+      can_edit_class_settings: true,
+    }
+  }
+
+  return null
 }
 
 export async function getClassWithEnrollments(classId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  const { data } = await db
+  const { data, error } = await db
     .from('classes')
     .select(`
       *,
@@ -50,7 +94,42 @@ export async function getClassWithEnrollments(classId: string) {
     `)
     .eq('id', classId)
     .single()
-  return data
+
+  if (data) return data
+  if (!isMissingClassTeachersRelation(error)) return data
+
+  const { data: fallbackClass } = await db
+    .from('classes')
+    .select(`
+      *,
+      class_enrollments(*, profiles(id, first_name, last_name, avatar_url))
+    `)
+    .eq('id', classId)
+    .single()
+
+  if (!fallbackClass) return null
+
+  const { data: teacherProfile } = await db
+    .from('profiles')
+    .select('id, first_name, last_name, avatar_url')
+    .eq('id', fallbackClass.teacher_id)
+    .maybeSingle()
+
+  return {
+    ...fallbackClass,
+    class_teachers: teacherProfile
+      ? [{
+        id: null,
+        teacher_id: fallbackClass.teacher_id,
+        class_role: 'lead_teacher',
+        can_manage_roster: true,
+        can_manage_assignments: true,
+        can_manage_grades: true,
+        can_edit_class_settings: true,
+        profiles: teacherProfile,
+      }]
+      : [],
+  }
 }
 
 export async function listLabsByTeacher(teacherId: string) {
@@ -93,12 +172,7 @@ export async function listAvailableClasses(teacherId: string, labId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  // Get all classes the teacher is assigned to (via class_teachers junction)
-  const { data: memberships } = await db
-    .from('class_teachers')
-    .select('class_id')
-    .eq('teacher_id', teacherId)
-  const classIds = (memberships ?? []).map((m: { class_id: string }) => m.class_id)
+  const classIds = await getTeacherClassIds(db, teacherId)
   if (classIds.length === 0) return []
   const { data: allClasses } = await db
     .from('classes')
@@ -190,12 +264,7 @@ export async function getAllGradesForTeacher(teacherId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  // Get all classes this teacher is in
-  const { data: memberships } = await db
-    .from('class_teachers')
-    .select('class_id')
-    .eq('teacher_id', teacherId)
-  const classIds = (memberships ?? []).map((m: { class_id: string }) => m.class_id)
+  const classIds = await getTeacherClassIds(db, teacherId)
   if (classIds.length === 0) return []
 
   // Get all assignments for those classes
