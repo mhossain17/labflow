@@ -179,6 +179,7 @@ export async function getTeacherUsageStats(orgId: string): Promise<TeacherUsageS
 
 export async function getStudentUsageStats(orgId: string): Promise<StudentUsageStat[]> {
   const supabase = await createClient()
+  const db = supabase as any
 
   const { data: students } = await supabase
     .from('profiles')
@@ -196,7 +197,7 @@ export async function getStudentUsageStats(orgId: string): Promise<StudentUsageS
       const runIds = (runs ?? []).map((r: any) => r.id)
       const [{ data: grades }, { data: helpReqs }] = await Promise.all([
         runIds.length > 0
-          ? supabase.from('student_grades').select('total_score, max_score').in('lab_run_id', runIds)
+          ? db.from('student_grades').select('total_score, max_score').in('lab_run_id', runIds)
           : Promise.resolve({ data: [] }),
         supabase.from('help_requests').select('id').eq('student_id', s.id),
       ])
