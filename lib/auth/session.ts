@@ -1,5 +1,13 @@
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import type { Profile, UserRole } from '@/types/app'
+
+export const IMPERSONATE_COOKIE = 'labflow_impersonate_org'
+
+export async function getImpersonatedOrgId(): Promise<string | null> {
+  const cookieStore = await cookies()
+  return cookieStore.get(IMPERSONATE_COOKIE)?.value ?? null
+}
 
 export async function getSession() {
   const supabase = await createClient()
@@ -21,7 +29,19 @@ export async function getProfile(): Promise<Profile | null> {
     .eq('id', user.id)
     .single()
 
-  return data as Profile | null
+  if (!data) return null
+
+  const profile = data as Profile
+
+  // For super_admin: inject the impersonated org so all admin pages work transparently
+  if (profile.role === 'super_admin') {
+    const impersonatedOrgId = await getImpersonatedOrgId()
+    if (impersonatedOrgId) {
+      return { ...profile, organization_id: impersonatedOrgId }
+    }
+  }
+
+  return profile
 }
 
 export async function getUserRole(): Promise<UserRole | null> {

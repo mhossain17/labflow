@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { UserRole } from '@/types/app'
+import type { Organization, UserRole } from '@/types/app'
 
 const VALID_ROLES: UserRole[] = ['teacher', 'student', 'school_admin', 'super_admin']
 
@@ -8,6 +8,16 @@ function parseRole(value: string): UserRole {
     return value as UserRole
   }
   return 'student'
+}
+
+export async function listAllOrganizations(): Promise<Organization[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('id, name, slug, logo_url, primary_color, secondary_color, created_at, updated_at')
+    .order('name', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as Organization[]
 }
 
 export async function getOrganization(orgId: string) {

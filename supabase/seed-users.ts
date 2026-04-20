@@ -28,6 +28,14 @@ const adminClient = createClient(supabaseUrl, serviceRoleKey, {
 
 const ORG_ID = 'aaaaaaaa-0000-0000-0000-000000000001'
 
+const SUPER_ADMIN = {
+  email: 'superadmin@labflow.dev',
+  password: 'LabFlow2025!',
+  role: 'super_admin',
+  first_name: 'Super',
+  last_name: 'Admin',
+}
+
 const DEMO_USERS = [
   {
     email: 'demo@westlake.demo',
@@ -96,6 +104,26 @@ const DEMO_USERS = [
 
 async function seedUsers() {
   const createdIds: Record<string, string> = {}
+
+  // Create super admin (no org)
+  console.log(`Creating super admin: ${SUPER_ADMIN.email}`)
+  const { data: saData, error: saError } = await adminClient.auth.admin.createUser({
+    email: SUPER_ADMIN.email,
+    password: SUPER_ADMIN.password,
+    email_confirm: true,
+    user_metadata: {
+      role: SUPER_ADMIN.role,
+      first_name: SUPER_ADMIN.first_name,
+      last_name: SUPER_ADMIN.last_name,
+    },
+    app_metadata: { role: SUPER_ADMIN.role },
+  })
+  if (saError) {
+    console.error(`Failed to create super admin:`, saError.message)
+  } else {
+    console.log(`  Created ${SUPER_ADMIN.email} → ${saData.user?.id}`)
+    if (saData.user?.id) createdIds['super_admin'] = saData.user.id
+  }
 
   for (const user of DEMO_USERS) {
     console.log(`Creating user: ${user.email}`)

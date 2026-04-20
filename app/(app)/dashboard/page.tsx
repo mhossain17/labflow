@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   if (role === 'teacher') redirect('/teacher/classes')
   if (role === 'school_admin') redirect('/admin/branding')
   if (role === 'student') redirect('/student/labs')
-  if (role === 'super_admin') redirect('/admin/branding')
+  if (role === 'super_admin') redirect('/super-admin')
 
   // Fallback: show profile setup prompt
   return (
