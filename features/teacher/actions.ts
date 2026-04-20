@@ -12,12 +12,24 @@ export async function createClass(data: {
 }) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: cls, error } = await (supabase as any)
+  const db = supabase as any
+  const { data: cls, error } = await db
     .from('classes')
-    .insert({ ...data, archived: false })
+    .insert({ ...data, archived: false, created_by: data.teacher_id })
     .select()
     .single()
   if (error) throw error
+  // Add creator to class_teachers as lead
+  await db.from('class_teachers').upsert(
+    {
+      class_id: cls.id,
+      teacher_id: data.teacher_id,
+      class_role: 'lead_teacher',
+      can_edit_class_settings: true,
+      added_by: data.teacher_id,
+    },
+    { onConflict: 'class_id,teacher_id', ignoreDuplicates: true }
+  )
   revalidatePath('/teacher/classes')
   return cls
 }

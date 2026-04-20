@@ -7,14 +7,14 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": true,
-      "cwd": "/Users/msh/LabFlow - Classroom Lab Manager"
+      "cwd": "."
     },
     {
       "name": "Next.js Production Preview",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "start"],
       "port": 3000,
-      "cwd": "/Users/msh/LabFlow - Classroom Lab Manager"
+      "cwd": "."
     }
   ]
 }

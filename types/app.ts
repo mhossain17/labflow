@@ -38,6 +38,7 @@ export type Class = {
   id: string
   organization_id: string
   teacher_id: string
+  created_by: string | null
   name: string
   description: string | null
   period: string | null
@@ -45,6 +46,30 @@ export type Class = {
   archived: boolean
   created_at: string
   updated_at: string
+}
+
+export type ClassRole = 'lead_teacher' | 'co_teacher'
+
+export type ClassTeacher = {
+  id: string
+  class_id: string
+  teacher_id: string
+  class_role: ClassRole
+  can_manage_roster: boolean
+  can_manage_assignments: boolean
+  can_manage_grades: boolean
+  can_edit_class_settings: boolean
+  added_by: string | null
+  created_at: string
+}
+
+export type ClassTeacherWithProfile = ClassTeacher & {
+  profiles: {
+    id: string
+    first_name: string
+    last_name: string
+    avatar_url: string | null
+  }
 }
 
 export type DataEntryField = {

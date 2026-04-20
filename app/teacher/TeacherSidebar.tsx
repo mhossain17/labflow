@@ -3,11 +3,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { LayoutList, FlaskConical, BookOpen, BarChart3, Paintbrush, Users, Settings, ToggleLeft, ShieldCheck, ChevronDown } from 'lucide-react'
+import { LayoutList, FlaskConical, BookOpen, BarChart3, Paintbrush, Users, Settings, ToggleLeft, ShieldCheck, ChevronDown, GraduationCap } from 'lucide-react'
 
 const teacherLinks = [
   { href: '/teacher/classes', label: 'Classes', icon: LayoutList },
   { href: '/teacher/labs', label: 'Labs', icon: FlaskConical },
+  { href: '/teacher/grades', label: 'Grades', icon: GraduationCap },
   { href: '/teacher/materials', label: 'Materials', icon: BookOpen },
   { href: '/teacher/analytics', label: 'Analytics', icon: BarChart3 },
 ]

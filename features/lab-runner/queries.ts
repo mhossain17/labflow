@@ -139,6 +139,59 @@ export async function getStudentDashboardData(studentId: string) {
   return classes
 }
 
+export async function getAllGradesForStudent(studentId: string) {
+  const client = await createClient()
+  const db = client as any
+
+  const { data: runs } = await db
+    .from('student_lab_runs')
+    .select(`
+      id, assignment_id, completed_at, status,
+      lab_assignments!inner(
+        class_id,
+        classes!inner(id, name, period),
+        labs!inner(id, title)
+      )
+    `)
+    .eq('student_id', studentId)
+    .order('started_at', { ascending: false })
+
+  if (!runs || runs.length === 0) return []
+
+  const runIds = runs.map((r: any) => r.id)
+  const { data: grades } = await db
+    .from('student_grades')
+    .select('lab_run_id, letter_grade, total_score, max_score, graded_at')
+    .in('lab_run_id', runIds)
+
+  const gradeMap = new Map<string, {
+    letter_grade: string | null
+    total_score: number
+    max_score: number
+    graded_at: string
+  }>()
+  for (const g of grades ?? []) {
+    gradeMap.set(g.lab_run_id, g)
+  }
+
+  return runs.map((run: any) => {
+    const assignment = run.lab_assignments
+    const cls = assignment?.classes
+    const lab = assignment?.labs
+    return {
+      lab_run_id: run.id,
+      class_id: cls?.id ?? '',
+      class_name: cls?.name ?? '—',
+      class_period: cls?.period ?? null,
+      lab_id: lab?.id ?? '',
+      lab_title: lab?.title ?? '—',
+      completed_at: run.completed_at,
+      status: run.status,
+      grade: gradeMap.get(run.id) ?? null,
+    }
+  })
+}
+
 export async function getGradeForRun(labRunId: string) {
   const client = await createClient()
   const db = client as any

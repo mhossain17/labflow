@@ -7,6 +7,14 @@ export type AuditAction =
   | 'delete_student_data'
   | 'update_user_role'
   | 'view_audit_log'
+  | 'class_created'
+  | 'class_archived'
+  | 'class_settings_updated'
+  | 'teacher_assigned_to_class'
+  | 'teacher_removed_from_class'
+  | 'student_enrolled_by_admin'
+  | 'student_unenrolled_by_admin'
+  | 'grade_saved'
 
 export async function logAuditEvent({
   actorId,

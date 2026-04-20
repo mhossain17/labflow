@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Paintbrush, Users, Settings, ToggleLeft, LayoutList, FlaskConical, BookOpen, BarChart3, ClipboardList } from 'lucide-react'
+import { Paintbrush, Users, Settings, ToggleLeft, LayoutList, FlaskConical, BookOpen, BarChart3, ClipboardList, GraduationCap, School } from 'lucide-react'
 
 const adminLinks = [
   { href: '/admin/branding', label: 'Branding', icon: Paintbrush },
@@ -10,6 +10,12 @@ const adminLinks = [
   { href: '/admin/settings', label: 'Settings', icon: Settings },
   { href: '/admin/feature-flags', label: 'Feature Flags', icon: ToggleLeft },
   { href: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
+]
+
+const classRosterLinks = [
+  { href: '/admin/classes', label: 'Classes', icon: School },
+  { href: '/admin/grades', label: 'Grades', icon: GraduationCap },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
 ]
 
 const teacherLinks = [
@@ -46,6 +52,12 @@ export function AdminSidebar() {
       <nav className="flex flex-col gap-1">
         {adminLinks.map(link => <NavLink key={link.href} {...link} />)}
       </nav>
+      <div className="border-t border-border pt-3">
+        <p className="px-3 mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rosters & Data</p>
+        <nav className="flex flex-col gap-1">
+          {classRosterLinks.map(link => <NavLink key={link.href} {...link} />)}
+        </nav>
+      </div>
       <div className="border-t border-border pt-3">
         <p className="px-3 mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Teacher</p>
         <nav className="flex flex-col gap-1">

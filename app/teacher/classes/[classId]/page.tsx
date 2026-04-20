@@ -1,11 +1,13 @@
-import { getClassWithEnrollments, getClassLabAssignments } from '@/features/teacher/queries'
+import { getProfile } from '@/lib/auth/session'
+import { redirect, notFound } from 'next/navigation'
+import { getClassWithEnrollments, getClassLabAssignments, getTeacherPermissionsForClass } from '@/features/teacher/queries'
 import { EnrollmentTable } from '@/components/teacher/classes/EnrollmentTable'
 import { AddStudentForm } from '@/components/teacher/classes/AddStudentForm'
 import { Badge } from '@/components/ui/badge'
 import { LabStatusBadge } from '@/components/teacher/lab-builder/LabStatusBadge'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, FlaskConical } from 'lucide-react'
-import { notFound } from 'next/navigation'
+import { ArrowLeft, Calendar, FlaskConical, Users } from 'lucide-react'
+import { notFound as nextNotFound } from 'next/navigation'
 import type { LabStatus } from '@/types/app'
 
 interface ClassDetailPageProps {
@@ -14,14 +16,20 @@ interface ClassDetailPageProps {
 
 export default async function ClassDetailPage({ params }: ClassDetailPageProps) {
   const { classId } = await params
-  const [cls, assignments] = await Promise.all([
+  const profile = await getProfile()
+  if (!profile) redirect('/login')
+
+  const [cls, assignments, permissions] = await Promise.all([
     getClassWithEnrollments(classId),
     getClassLabAssignments(classId),
+    getTeacherPermissionsForClass(profile.id, classId),
   ])
 
   if (!cls) notFound()
 
   const enrollments = cls.class_enrollments ?? []
+  const classTeachers = cls.class_teachers ?? []
+  const canManageRoster = !!permissions?.can_manage_roster
 
   return (
     <div className="space-y-8">
@@ -48,6 +56,39 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
         </div>
       </div>
 
+      {/* Teaching Team */}
+      {classTeachers.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Users className="size-5 text-muted-foreground" />
+            Teaching Team
+            <span className="text-sm font-normal text-muted-foreground">({classTeachers.length})</span>
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {classTeachers.map((ct: {
+              id: string
+              class_role: string
+              profiles: { first_name: string; last_name: string } | null
+            }) => (
+              <div
+                key={ct.id}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-3 py-1.5 text-sm"
+              >
+                <span className="font-medium">
+                  {ct.profiles ? `${ct.profiles.first_name} ${ct.profiles.last_name}` : '—'}
+                </span>
+                <Badge
+                  variant={ct.class_role === 'lead_teacher' ? 'default' : 'secondary'}
+                  className="text-xs"
+                >
+                  {ct.class_role === 'lead_teacher' ? 'Lead' : 'Co-teacher'}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Students */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -58,8 +99,8 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
             </span>
           </h2>
         </div>
-        <AddStudentForm classId={classId} />
-        <EnrollmentTable classId={classId} enrollments={enrollments} />
+        {canManageRoster && <AddStudentForm classId={classId} />}
+        <EnrollmentTable classId={classId} enrollments={enrollments} canManageRoster={canManageRoster} />
       </section>
 
       {/* Assigned Labs */}

@@ -20,6 +20,7 @@ interface Enrollment {
 interface EnrollmentTableProps {
   classId: string
   enrollments: Enrollment[]
+  canManageRoster?: boolean
 }
 
 function UnenrollButton({ classId, studentId }: { classId: string; studentId: string }) {
@@ -45,7 +46,7 @@ function UnenrollButton({ classId, studentId }: { classId: string; studentId: st
   )
 }
 
-export function EnrollmentTable({ classId, enrollments }: EnrollmentTableProps) {
+export function EnrollmentTable({ classId, enrollments, canManageRoster = true }: EnrollmentTableProps) {
   if (enrollments.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
@@ -74,9 +75,11 @@ export function EnrollmentTable({ classId, enrollments }: EnrollmentTableProps) 
                 <td className="px-4 py-3 font-medium">
                   {student.first_name} {student.last_name}
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <UnenrollButton classId={classId} studentId={enrollment.student_id} />
-                </td>
+                {canManageRoster && (
+                  <td className="px-4 py-3 text-right">
+                    <UnenrollButton classId={classId} studentId={enrollment.student_id} />
+                  </td>
+                )}
               </tr>
             )
           })}
