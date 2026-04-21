@@ -1,6 +1,7 @@
 import { requireRole } from '@/lib/auth/role-guard'
 import { listAllOrganizations } from '@/features/admin/queries'
 import { impersonateOrg } from './actions'
+import { CreateOrgDialog } from '@/components/super-admin/CreateOrgDialog'
 import { Building2, ArrowRight } from 'lucide-react'
 
 export default async function SuperAdminPage() {
@@ -10,11 +11,14 @@ export default async function SuperAdminPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
-      <div>
-        <h1 className="text-2xl font-bold">Organizations</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Select an organization to manage it as their school admin.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Organizations</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Select an organization to manage it as their school admin.
+          </p>
+        </div>
+        <CreateOrgDialog />
       </div>
 
       {orgs.length === 0 ? (
