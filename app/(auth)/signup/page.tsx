@@ -53,7 +53,7 @@ export default function SignupPage() {
     const { data: org, error: orgError } = await db
       .from('organizations')
       .select('id, name')
-      .eq('slug', data.orgCode)
+      .ilike('slug', data.orgCode.trim())
       .single()
 
     if (orgError || !org) {
