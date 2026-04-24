@@ -86,6 +86,7 @@ function SignupForm() {
       email: data.email,
       password: data.password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           organization_id: lookup.org_id,
           role: lookup.assigned_role,
