@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -39,6 +40,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          target_id: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_enrollments: {
         Row: {
           class_id: string
@@ -75,10 +117,72 @@ export type Database = {
           },
         ]
       }
+      class_teachers: {
+        Row: {
+          added_by: string | null
+          can_edit_class_settings: boolean
+          can_manage_assignments: boolean
+          can_manage_grades: boolean
+          can_manage_roster: boolean
+          class_id: string
+          class_role: string
+          created_at: string | null
+          id: string
+          teacher_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          can_edit_class_settings?: boolean
+          can_manage_assignments?: boolean
+          can_manage_grades?: boolean
+          can_manage_roster?: boolean
+          class_id: string
+          class_role?: string
+          created_at?: string | null
+          id?: string
+          teacher_id: string
+        }
+        Update: {
+          added_by?: string | null
+          can_edit_class_settings?: boolean
+          can_manage_assignments?: boolean
+          can_manage_grades?: boolean
+          can_manage_roster?: boolean
+          class_id?: string
+          class_role?: string
+          created_at?: string | null
+          id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_teachers_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_teachers_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_teachers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
           archived: boolean
           created_at: string
+          created_by: string | null
           description: string | null
           id: string
           name: string
@@ -91,6 +195,7 @@ export type Database = {
         Insert: {
           archived?: boolean
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           name: string
@@ -103,6 +208,7 @@ export type Database = {
         Update: {
           archived?: boolean
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           name?: string
@@ -113,6 +219,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "classes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "classes_organization_id_fkey"
             columns: ["organization_id"]
@@ -396,6 +509,7 @@ export type Database = {
       organizations: {
         Row: {
           created_at: string
+          data_retention_months: number
           footer_text: string | null
           id: string
           logo_url: string | null
@@ -403,10 +517,13 @@ export type Database = {
           primary_color: string
           secondary_color: string
           slug: string
+          staff_code: string | null
+          student_code: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          data_retention_months?: number
           footer_text?: string | null
           id?: string
           logo_url?: string | null
@@ -414,10 +531,13 @@ export type Database = {
           primary_color?: string
           secondary_color?: string
           slug: string
+          staff_code?: string | null
+          student_code?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          data_retention_months?: number
           footer_text?: string | null
           id?: string
           logo_url?: string | null
@@ -425,6 +545,8 @@ export type Database = {
           primary_color?: string
           secondary_color?: string
           slug?: string
+          staff_code?: string | null
+          student_code?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -528,32 +650,38 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          coppa_consented: boolean
           created_at: string
           first_name: string
           id: string
           last_name: string
-          organization_id: string
+          organization_id: string | null
           role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          coppa_consented?: boolean
           created_at?: string
           first_name?: string
           id: string
           last_name?: string
-          organization_id: string
+          organization_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          coppa_consented?: boolean
           created_at?: string
           first_name?: string
           id?: string
           last_name?: string
-          organization_id?: string
+          organization_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
         }
         Relationships: [
@@ -562,6 +690,89 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rubric_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          lab_id: string
+          max_points: number
+          position: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          lab_id: string
+          max_points?: number
+          position?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          lab_id?: string
+          max_points?: number
+          position?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubric_items_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rubric_scores: {
+        Row: {
+          id: string
+          lab_run_id: string
+          rubric_item_id: string
+          self_score: number | null
+          teacher_comment: string | null
+          teacher_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          lab_run_id: string
+          rubric_item_id: string
+          self_score?: number | null
+          teacher_comment?: string | null
+          teacher_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          lab_run_id?: string
+          rubric_item_id?: string
+          self_score?: number | null
+          teacher_comment?: string | null
+          teacher_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rubric_scores_lab_run_id_fkey"
+            columns: ["lab_run_id"]
+            isOneToOne: false
+            referencedRelation: "student_lab_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rubric_scores_rubric_item_id_fkey"
+            columns: ["rubric_item_id"]
+            isOneToOne: false
+            referencedRelation: "rubric_items"
             referencedColumns: ["id"]
           },
         ]
@@ -618,6 +829,57 @@ export type Database = {
           {
             foreignKeyName: "step_responses_student_id_fkey"
             columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_grades: {
+        Row: {
+          graded_at: string
+          id: string
+          lab_run_id: string
+          letter_grade: string | null
+          max_score: number | null
+          overall_comment: string | null
+          teacher_id: string | null
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          graded_at?: string
+          id?: string
+          lab_run_id: string
+          letter_grade?: string | null
+          max_score?: number | null
+          overall_comment?: string | null
+          teacher_id?: string | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          graded_at?: string
+          id?: string
+          lab_run_id?: string
+          letter_grade?: string | null
+          max_score?: number | null
+          overall_comment?: string | null
+          teacher_id?: string | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_grades_lab_run_id_fkey"
+            columns: ["lab_run_id"]
+            isOneToOne: true
+            referencedRelation: "student_lab_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_grades_teacher_id_fkey"
+            columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -776,6 +1038,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_org_code: { Args: never; Returns: string }
+      is_teacher_of_class: {
+        Args: { p_class_id: string; p_teacher_id: string }
+        Returns: boolean
+      }
+      lookup_org_by_signup_code: {
+        Args: { code: string }
+        Returns: Database["public"]["CompositeTypes"]["signup_code_lookup"]
+        SetofOptions: {
+          from: "*"
+          to: "signup_code_lookup"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       my_org: { Args: never; Returns: string }
       my_role: {
         Args: never
@@ -783,9 +1060,22 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      student_enrolled_in_class: {
+        Args: { p_class_id: string; p_student_id: string }
+        Returns: boolean
+      }
+      teacher_can: {
+        Args: { p_class_id: string; p_permission: string }
+        Returns: boolean
+      }
+      teacher_has_student: {
+        Args: { p_student_id: string; p_teacher_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       lab_status: "draft" | "published" | "archived"
+      profile_status: "active" | "pending_review"
       student_work_status:
         | "on_track"
         | "need_help"
@@ -796,7 +1086,10 @@ export type Database = {
       user_role: "teacher" | "student" | "school_admin" | "super_admin"
     }
     CompositeTypes: {
-      [_ in never]: never
+      signup_code_lookup: {
+        org_id: string | null
+        assigned_role: Database["public"]["Enums"]["user_role"] | null
+      }
     }
   }
 }
@@ -925,6 +1218,7 @@ export const Constants = {
   public: {
     Enums: {
       lab_status: ["draft", "published", "archived"],
+      profile_status: ["active", "pending_review"],
       student_work_status: [
         "on_track",
         "need_help",

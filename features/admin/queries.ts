@@ -13,9 +13,7 @@ function parseRole(value: string): UserRole {
 
 export async function listAllOrganizations(): Promise<Organization[]> {
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('organizations')
     .select('id, name, slug, logo_url, primary_color, secondary_color, student_code, staff_code, created_at, updated_at')
     .order('name', { ascending: true })
@@ -44,9 +42,7 @@ export async function getOrganization(orgId: string) {
 
 export async function listProfilesByOrg(orgId: string) {
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('profiles')
     .select('id, first_name, last_name, role, status')
     .eq('organization_id', orgId)

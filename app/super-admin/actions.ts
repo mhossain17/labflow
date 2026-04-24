@@ -60,7 +60,7 @@ export async function createOrganization(formData: FormData): Promise<{
     attempts++
   } while (code2 === (code1 as string) && attempts < 10)
 
-  const { data: org, error } = await db
+  const { data: org, error } = await supabase
     .from('organizations')
     .insert({
       name,
@@ -103,11 +103,12 @@ export async function regenerateOrgCode(
   const { data: newCode, error: codeError } = await (supabase as any).rpc('generate_org_code')
   if (codeError) throw new Error('Failed to generate code')
 
-  const column = codeType === 'student' ? 'student_code' : 'staff_code'
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const updateData = codeType === 'student'
+    ? { student_code: newCode as string }
+    : { staff_code: newCode as string }
+  const { error } = await supabase
     .from('organizations')
-    .update({ [column]: newCode as string })
+    .update(updateData)
     .eq('id', orgId)
   if (error) throw new Error(error.message)
 
@@ -148,8 +149,7 @@ export async function approveStaffMemberSuperAdmin(profileId: string): Promise<v
   if (role !== 'super_admin') throw new Error('Unauthorized')
 
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('profiles')
     .update({ status: 'active', updated_at: new Date().toISOString() })
     .eq('id', profileId)
