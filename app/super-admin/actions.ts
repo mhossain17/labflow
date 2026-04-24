@@ -44,8 +44,10 @@ export async function createOrganization(formData: FormData): Promise<{
   if (!/^[a-z0-9-]+$/.test(slug)) throw new Error('Slug may only contain lowercase letters, numbers, and hyphens')
 
   const supabase = await createClient()
+  const adminClient = createAdminClient()
+  if (!adminClient) throw new Error('Admin API not available — check SUPABASE_SERVICE_ROLE_KEY')
 
-  // Generate two unique codes via DB function
+  // Generate two unique codes via DB function (authenticated RPC)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   const { data: code1, error: e1 } = await db.rpc('generate_org_code')
@@ -60,7 +62,10 @@ export async function createOrganization(formData: FormData): Promise<{
     attempts++
   } while (code2 === (code1 as string) && attempts < 10)
 
-  const { data: org, error } = await supabase
+  // Use service-role client to bypass RLS — super_admin has no org INSERT policy
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adminDb = adminClient as any
+  const { data: org, error } = await adminDb
     .from('organizations')
     .insert({
       name,
@@ -75,7 +80,7 @@ export async function createOrganization(formData: FormData): Promise<{
   if (error) throw new Error(error.message)
 
   // Seed default feature flags
-  await supabase.from('feature_flags').insert([
+  await adminDb.from('feature_flags').insert([
     { organization_id: org.id, flag_key: 'ai_lab_generation', enabled: false },
     { organization_id: org.id, flag_key: 'help_chat', enabled: false },
     { organization_id: org.id, flag_key: 'analytics', enabled: true },
