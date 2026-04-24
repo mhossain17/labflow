@@ -1,12 +1,14 @@
 export type UserRole = 'teacher' | 'student' | 'school_admin' | 'super_admin'
+export type ProfileStatus = 'active' | 'pending_review'
 export type ThemePreference = 'light' | 'dark' | 'system'
 export type LabStatus = 'draft' | 'published' | 'archived'
 export type StudentWorkStatus = 'on_track' | 'need_help' | 'stuck' | 'waiting_for_check' | 'finished_step'
 
 export type Profile = {
   id: string
-  organization_id: string
+  organization_id: string | null
   role: UserRole
+  status: ProfileStatus
   first_name: string
   last_name: string
   avatar_url: string | null
@@ -21,6 +23,8 @@ export type Organization = {
   logo_url: string | null
   primary_color: string
   secondary_color: string
+  student_code: string | null
+  staff_code: string | null
   created_at: string
   updated_at: string
 }

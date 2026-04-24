@@ -7,6 +7,7 @@ export default async function AdminGradesPage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')
   if (!['school_admin', 'super_admin'].includes(profile.role)) redirect('/teacher/grades')
+  if (!profile.organization_id) redirect('/super-admin')
 
   const [rows, classOptions, labOptions] = await Promise.all([
     getOrgGradeSummary(profile.organization_id),

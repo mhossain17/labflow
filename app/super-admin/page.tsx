@@ -2,6 +2,7 @@ import { requireRole } from '@/lib/auth/role-guard'
 import { listAllOrganizations } from '@/features/admin/queries'
 import { impersonateOrg } from './actions'
 import { CreateOrgDialog } from '@/components/super-admin/CreateOrgDialog'
+import { OrgCodeRow } from '@/components/super-admin/OrgCodeRow'
 import { Building2, ArrowRight } from 'lucide-react'
 
 export default async function SuperAdminPage() {
@@ -15,22 +16,19 @@ export default async function SuperAdminPage() {
         <div>
           <h1 className="text-2xl font-bold">Organizations</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Select an organization to manage it as their school admin.
+            Manage organizations and their join codes.
           </p>
         </div>
         <CreateOrgDialog />
       </div>
 
       {orgs.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No organizations found.</p>
+        <p className="text-muted-foreground text-sm">No organizations found. Create one to get started.</p>
       ) : (
         <div className="grid gap-3">
           {orgs.map((org) => (
-            <form key={org.id} action={impersonateOrg.bind(null, org.id)}>
-              <button
-                type="submit"
-                className="w-full flex items-center justify-between gap-4 rounded-lg border bg-card px-5 py-4 text-left transition-colors hover:bg-muted/50 hover:border-primary/30 group"
-              >
+            <div key={org.id} className="rounded-lg border bg-card px-5 py-4">
+              <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   {org.logo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -52,12 +50,23 @@ export default async function SuperAdminPage() {
                     <p className="text-xs text-muted-foreground mt-0.5">/{org.slug}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                  <span>Manage</span>
-                  <ArrowRight className="h-4 w-4" />
-                </div>
-              </button>
-            </form>
+                <form action={impersonateOrg.bind(null, org.id)}>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                  >
+                    <span>Manage</span>
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </form>
+              </div>
+
+              <OrgCodeRow
+                orgId={org.id}
+                studentCode={org.student_code}
+                staffCode={org.staff_code}
+              />
+            </div>
           ))}
         </div>
       )}

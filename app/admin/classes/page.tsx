@@ -9,6 +9,7 @@ export default async function AdminClassesPage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')
   if (!['school_admin', 'super_admin'].includes(profile.role)) redirect('/teacher/classes')
+  if (!profile.organization_id) redirect('/super-admin')
 
   const [classes, teachers] = await Promise.all([
     listClassesByOrg(profile.organization_id),

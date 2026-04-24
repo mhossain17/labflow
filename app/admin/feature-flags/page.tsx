@@ -26,7 +26,7 @@ export default async function FeatureFlagsPage() {
   await requireRole(['school_admin', 'super_admin'])
 
   const profile = await getProfile()
-  if (!profile) return null
+  if (!profile || !profile.organization_id) return null
 
   const orgId = profile.organization_id
   const flags = await listFeatureFlags(orgId)

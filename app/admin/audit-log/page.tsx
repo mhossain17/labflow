@@ -39,7 +39,7 @@ export default async function AuditLogPage() {
   await requireRole(['school_admin', 'super_admin'])
 
   const actor = await getProfile()
-  if (!actor) return null
+  if (!actor || !actor.organization_id) return null
 
   const logs = await getAuditLogs(actor.organization_id)
 

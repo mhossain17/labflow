@@ -2,33 +2,42 @@
 -- organizations
 -- ============================================================
 CREATE TABLE public.organizations (
-  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  name             text        NOT NULL,
-  slug             text        NOT NULL UNIQUE,
-  logo_url         text,
-  primary_color    text        NOT NULL DEFAULT '#2563EB',
-  secondary_color  text        NOT NULL DEFAULT '#7C3AED',
-  footer_text      text,
-  created_at       timestamptz NOT NULL DEFAULT now(),
-  updated_at       timestamptz NOT NULL DEFAULT now()
+  id                     uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name                   text        NOT NULL,
+  slug                   text        NOT NULL UNIQUE,
+  logo_url               text,
+  primary_color          text        NOT NULL DEFAULT '#2563EB',
+  secondary_color        text        NOT NULL DEFAULT '#7C3AED',
+  footer_text            text,
+  student_code           text        UNIQUE,
+  staff_code             text        UNIQUE,
+  data_retention_months  integer     NOT NULL DEFAULT 12,
+  created_at             timestamptz NOT NULL DEFAULT now(),
+  updated_at             timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT chk_student_code_lowercase CHECK (student_code = lower(student_code)),
+  CONSTRAINT chk_staff_code_lowercase   CHECK (staff_code   = lower(staff_code))
 );
 
 -- ============================================================
 -- profiles  (1:1 extension of auth.users)
+-- organization_id is nullable for super_admin accounts
 -- ============================================================
 CREATE TABLE public.profiles (
-  id               uuid        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  organization_id  uuid        NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
-  role             public.user_role NOT NULL DEFAULT 'student',
-  first_name       text        NOT NULL DEFAULT '',
-  last_name        text        NOT NULL DEFAULT '',
+  id               uuid                   PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  organization_id  uuid                   REFERENCES public.organizations(id) ON DELETE CASCADE,
+  role             public.user_role       NOT NULL DEFAULT 'student',
+  status           public.profile_status  NOT NULL DEFAULT 'active',
+  first_name       text                   NOT NULL DEFAULT '',
+  last_name        text                   NOT NULL DEFAULT '',
   avatar_url       text,
-  created_at       timestamptz NOT NULL DEFAULT now(),
-  updated_at       timestamptz NOT NULL DEFAULT now()
+  coppa_consented  boolean                NOT NULL DEFAULT false,
+  created_at       timestamptz            NOT NULL DEFAULT now(),
+  updated_at       timestamptz            NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_profiles_organization_id ON public.profiles (organization_id);
 CREATE INDEX idx_profiles_role             ON public.profiles (role);
+CREATE INDEX idx_profiles_status           ON public.profiles (status);
 
 -- ============================================================
 -- user_settings
@@ -49,6 +58,7 @@ CREATE TABLE public.classes (
   id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id  uuid        NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   teacher_id       uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_by       uuid        REFERENCES public.profiles(id),
   name             text        NOT NULL,
   description      text,
   period           text,
@@ -74,6 +84,27 @@ CREATE TABLE public.class_enrollments (
 
 CREATE INDEX idx_class_enrollments_student_id ON public.class_enrollments (student_id);
 CREATE INDEX idx_class_enrollments_class_id   ON public.class_enrollments (class_id);
+
+-- ============================================================
+-- class_teachers  (multi-teacher support)
+-- ============================================================
+CREATE TABLE public.class_teachers (
+  id                      uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  class_id                uuid        NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
+  teacher_id              uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  class_role              text        NOT NULL DEFAULT 'co_teacher'
+                          CHECK (class_role IN ('lead_teacher', 'co_teacher')),
+  can_manage_roster       boolean     NOT NULL DEFAULT true,
+  can_manage_assignments  boolean     NOT NULL DEFAULT true,
+  can_manage_grades       boolean     NOT NULL DEFAULT true,
+  can_edit_class_settings boolean     NOT NULL DEFAULT false,
+  added_by                uuid        REFERENCES public.profiles(id),
+  created_at              timestamptz DEFAULT now(),
+  UNIQUE (class_id, teacher_id)
+);
+
+CREATE INDEX class_teachers_class_id_idx   ON public.class_teachers (class_id);
+CREATE INDEX class_teachers_teacher_id_idx ON public.class_teachers (teacher_id);
 
 -- ============================================================
 -- teacher_materials
@@ -127,7 +158,7 @@ CREATE TABLE public.pre_lab_questions (
   question_text  text    NOT NULL,
   question_type  text    NOT NULL DEFAULT 'short_answer'
                          CHECK (question_type IN ('short_answer', 'multiple_choice', 'true_false')),
-  options        jsonb,   -- for multiple_choice: ["A","B","C"]
+  options        jsonb,
   correct_answer text,
   required       boolean NOT NULL DEFAULT true,
   created_at     timestamptz NOT NULL DEFAULT now()
@@ -145,7 +176,7 @@ CREATE TABLE public.lab_steps (
   title              text    NOT NULL,
   instructions       text    NOT NULL,
   checkpoint         text,
-  data_entry_fields  jsonb,  -- [{label, type, unit, min, max, required}]
+  data_entry_fields  jsonb,
   reflection_prompt  text,
   troubleshooting    text,
   image_url          text,
@@ -159,13 +190,13 @@ CREATE INDEX idx_lab_steps_lab_id_step_number ON public.lab_steps (lab_id, step_
 -- lab_assignments
 -- ============================================================
 CREATE TABLE public.lab_assignments (
-  id                   uuid  PRIMARY KEY DEFAULT gen_random_uuid(),
-  lab_id               uuid  NOT NULL REFERENCES public.labs(id) ON DELETE CASCADE,
-  class_id             uuid  NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
-  assigned_by          uuid  NOT NULL REFERENCES public.profiles(id),
-  due_date             date,
+  id                    uuid  PRIMARY KEY DEFAULT gen_random_uuid(),
+  lab_id                uuid  NOT NULL REFERENCES public.labs(id) ON DELETE CASCADE,
+  class_id              uuid  NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
+  assigned_by           uuid  NOT NULL REFERENCES public.profiles(id),
+  due_date              date,
   instructions_override text,
-  created_at           timestamptz NOT NULL DEFAULT now(),
+  created_at            timestamptz NOT NULL DEFAULT now(),
   UNIQUE (lab_id, class_id)
 );
 
@@ -176,17 +207,17 @@ CREATE INDEX idx_lab_assignments_class_id ON public.lab_assignments (class_id);
 -- student_lab_runs
 -- ============================================================
 CREATE TABLE public.student_lab_runs (
-  id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  assignment_id      uuid        NOT NULL REFERENCES public.lab_assignments(id) ON DELETE CASCADE,
-  student_id         uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  lab_id             uuid        NOT NULL REFERENCES public.labs(id),
-  current_step       integer     NOT NULL DEFAULT 0,  -- 0 = pre-lab
-  prelab_completed   boolean     NOT NULL DEFAULT false,
-  status             public.student_work_status NOT NULL DEFAULT 'on_track',
-  quick_note         text,
-  started_at         timestamptz NOT NULL DEFAULT now(),
-  completed_at       timestamptz,
-  updated_at         timestamptz NOT NULL DEFAULT now(),
+  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  assignment_id    uuid        NOT NULL REFERENCES public.lab_assignments(id) ON DELETE CASCADE,
+  student_id       uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  lab_id           uuid        NOT NULL REFERENCES public.labs(id),
+  current_step     integer     NOT NULL DEFAULT 0,
+  prelab_completed boolean     NOT NULL DEFAULT false,
+  status           public.student_work_status NOT NULL DEFAULT 'on_track',
+  quick_note       text,
+  started_at       timestamptz NOT NULL DEFAULT now(),
+  completed_at     timestamptz,
+  updated_at       timestamptz NOT NULL DEFAULT now(),
   UNIQUE (assignment_id, student_id)
 );
 
@@ -218,9 +249,9 @@ CREATE TABLE public.step_responses (
   lab_run_id       uuid        NOT NULL REFERENCES public.student_lab_runs(id) ON DELETE CASCADE,
   step_id          uuid        NOT NULL REFERENCES public.lab_steps(id) ON DELETE CASCADE,
   student_id       uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  data_values      jsonb,      -- {fieldLabel: value}
+  data_values      jsonb,
   reflection_text  text,
-  flags            jsonb,      -- [{field, rule, message}]
+  flags            jsonb,
   completed        boolean     NOT NULL DEFAULT false,
   saved_at         timestamptz NOT NULL DEFAULT now(),
   UNIQUE (lab_run_id, step_id)
@@ -233,15 +264,15 @@ CREATE INDEX idx_step_responses_step_id    ON public.step_responses (step_id);
 -- help_requests
 -- ============================================================
 CREATE TABLE public.help_requests (
-  id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  lab_run_id            uuid        NOT NULL REFERENCES public.student_lab_runs(id) ON DELETE CASCADE,
-  student_id            uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  step_id               uuid        REFERENCES public.lab_steps(id),
-  escalated_to_teacher  boolean     NOT NULL DEFAULT false,
-  conversation          jsonb       NOT NULL DEFAULT '[]'::jsonb,  -- [{role, content, ts}]
-  resolved              boolean     NOT NULL DEFAULT false,
-  created_at            timestamptz NOT NULL DEFAULT now(),
-  updated_at            timestamptz NOT NULL DEFAULT now()
+  id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  lab_run_id           uuid        NOT NULL REFERENCES public.student_lab_runs(id) ON DELETE CASCADE,
+  student_id           uuid        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  step_id              uuid        REFERENCES public.lab_steps(id),
+  escalated_to_teacher boolean     NOT NULL DEFAULT false,
+  conversation         jsonb       NOT NULL DEFAULT '[]'::jsonb,
+  resolved             boolean     NOT NULL DEFAULT false,
+  created_at           timestamptz NOT NULL DEFAULT now(),
+  updated_at           timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_help_requests_lab_run_id ON public.help_requests (lab_run_id);
@@ -260,3 +291,47 @@ CREATE TABLE public.feature_flags (
 );
 
 CREATE INDEX idx_feature_flags_organization_id ON public.feature_flags (organization_id);
+
+-- ============================================================
+-- rubric_items
+-- ============================================================
+CREATE TABLE public.rubric_items (
+  id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  lab_id      uuid        NOT NULL REFERENCES public.labs(id) ON DELETE CASCADE,
+  title       text        NOT NULL,
+  description text,
+  max_points  integer     NOT NULL DEFAULT 10,
+  position    integer     NOT NULL DEFAULT 0,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON public.rubric_items (lab_id);
+
+-- ============================================================
+-- student_grades
+-- ============================================================
+CREATE TABLE public.student_grades (
+  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  lab_run_id      uuid        UNIQUE NOT NULL REFERENCES public.student_lab_runs(id) ON DELETE CASCADE,
+  teacher_id      uuid        REFERENCES public.profiles(id) ON DELETE SET NULL,
+  total_score     numeric,
+  max_score       numeric,
+  letter_grade    text,
+  overall_comment text,
+  graded_at       timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now()
+);
+
+-- ============================================================
+-- rubric_scores
+-- ============================================================
+CREATE TABLE public.rubric_scores (
+  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  lab_run_id      uuid        NOT NULL REFERENCES public.student_lab_runs(id) ON DELETE CASCADE,
+  rubric_item_id  uuid        NOT NULL REFERENCES public.rubric_items(id) ON DELETE CASCADE,
+  self_score      numeric,
+  teacher_score   numeric,
+  teacher_comment text,
+  updated_at      timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (lab_run_id, rubric_item_id)
+);

@@ -1,5 +1,6 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { UserRole } from '@/types/app'
 import { logAuditEvent } from '@/lib/audit'
@@ -95,7 +96,7 @@ export async function deleteStudentData(studentId: string) {
 
   // Delete auth user via service role
   try {
-    const adminClient = await createAdminClient()
+    const adminClient = createAdminClient()
     if (adminClient) {
       await adminClient.auth.admin.deleteUser(studentId)
     }
@@ -125,7 +126,7 @@ export async function updateUserRole(profileId: string, role: UserRole) {
 
   // Also update app_metadata via Supabase Admin if available
   try {
-    const adminClient = await createAdminClient()
+    const adminClient = createAdminClient()
     if (adminClient) {
       await adminClient.auth.admin.updateUserById(profileId, {
         app_metadata: { role },
@@ -138,13 +139,20 @@ export async function updateUserRole(profileId: string, role: UserRole) {
   revalidatePath('/admin/users')
 }
 
-async function createAdminClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceRoleKey) return null
-  // Import dynamically to avoid bundling issues
-  const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey
-  )
+export async function approveStaffMember(profileId: string): Promise<void> {
+  const profile = await getProfile()
+  if (!profile || !['school_admin', 'super_admin'].includes(profile.role)) {
+    throw new Error('Unauthorized')
+  }
+
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from('profiles')
+    .update({ status: 'active', updated_at: new Date().toISOString() })
+    .eq('id', profileId)
+    .eq('organization_id', profile.organization_id)
+  if (error) throw error
+
+  revalidatePath('/admin/users')
 }

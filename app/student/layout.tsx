@@ -9,7 +9,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
 
   const profile = await getProfile()
   let org: { primary_color: string; secondary_color: string } | null = null
-  if (profile) {
+  if (profile && profile.organization_id) {
     try {
       org = await getOrganization(profile.organization_id)
     } catch {

@@ -18,6 +18,7 @@ export default async function AdminClassDetailPage({ params }: PageProps) {
   const profile = await getProfile()
   if (!profile) redirect('/login')
   if (!['school_admin', 'super_admin'].includes(profile.role)) redirect('/teacher/classes')
+  if (!profile.organization_id) redirect('/super-admin')
 
   const [cls, orgTeachers, orgStudents] = await Promise.all([
     getClassDetailForAdmin(classId),

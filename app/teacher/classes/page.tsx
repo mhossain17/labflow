@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 export default async function ClassesPage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')
+  if (!profile.organization_id) redirect('/login')
 
   const classes = await listClassesByTeacher(profile.id)
 

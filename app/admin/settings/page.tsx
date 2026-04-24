@@ -7,7 +7,7 @@ export default async function AdminSettingsPage() {
   await requireRole(['school_admin', 'super_admin'])
 
   const profile = await getProfile()
-  if (!profile) return null
+  if (!profile || !profile.organization_id) return null
 
   const org = await getOrganization(profile.organization_id)
 

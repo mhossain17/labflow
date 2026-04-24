@@ -11,7 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const profile = await getProfile()
   let org: { id: string; name: string; primary_color: string; secondary_color: string } | null = null
-  if (profile) {
+  if (profile && profile.organization_id) {
     try {
       org = await getOrganization(profile.organization_id)
     } catch {

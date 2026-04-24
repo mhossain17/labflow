@@ -17,6 +17,7 @@ export default async function AdminAnalyticsPage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')
   if (!['school_admin', 'super_admin'].includes(profile.role)) redirect('/teacher/analytics')
+  if (!profile.organization_id) redirect('/super-admin')
 
   const [overview, teacherStats, studentStats, trend, helpStats] = await Promise.all([
     getOrgAnalyticsOverview(profile.organization_id),

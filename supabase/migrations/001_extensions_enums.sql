@@ -11,6 +11,11 @@ CREATE TYPE public.user_role AS ENUM (
   'super_admin'
 );
 
+CREATE TYPE public.profile_status AS ENUM (
+  'active',
+  'pending_review'
+);
+
 CREATE TYPE public.theme_preference AS ENUM (
   'light',
   'dark',

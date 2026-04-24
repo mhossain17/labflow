@@ -9,6 +9,7 @@ import { FolderOpen } from 'lucide-react'
 export default async function MaterialsPage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')
+  if (!profile.organization_id) redirect('/login')
 
   const materials = await listAllTeacherMaterials(profile.id)
 

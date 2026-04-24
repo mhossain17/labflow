@@ -1,9 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,10 +19,8 @@ const signupSchema = z
     email: z.string().email('Please enter a valid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
-    orgCode: z.string().min(1, 'School code is required'),
-    ageConsent: z.boolean().refine((v) => v === true, {
-      message: 'You must confirm the student is 13 or older, or that the school has obtained parental consent',
-    }),
+    orgCode: z.string().min(1, 'Join code is required'),
+    ageConsent: z.boolean().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -30,9 +29,13 @@ const signupSchema = z
 
 type SignupForm = z.infer<typeof signupSchema>
 
-export default function SignupPage() {
+function SignupForm() {
+  const searchParams = useSearchParams()
+  const prefilledCode = searchParams.get('code') ?? ''
+
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [success, setSuccess] = useState<'student' | 'teacher' | null>(null)
+  const [resolvedRole, setResolvedRole] = useState<'student' | 'teacher' | null>(null)
 
   const {
     register,
@@ -40,36 +43,52 @@ export default function SignupPage() {
     formState: { errors, isSubmitting },
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { ageConsent: false },
+    defaultValues: { ageConsent: false, orgCode: prefilledCode },
   })
+
+  async function handleCodeBlur(e: React.FocusEvent<HTMLInputElement>) {
+    const code = e.target.value.trim()
+    if (!code) {
+      setResolvedRole(null)
+      return
+    }
+    const supabase = createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any).rpc('lookup_org_by_signup_code', { code })
+    if (data?.org_id) {
+      setResolvedRole(data.assigned_role === 'teacher' ? 'teacher' : 'student')
+    } else {
+      setResolvedRole(null)
+    }
+  }
 
   async function onSubmit(data: SignupForm) {
     setError(null)
     const supabase = createClient()
 
-    // Look up org by slug — cast to any due to stub DB types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any
-    const { data: org, error: orgError } = await db
-      .from('organizations')
-      .select('id, name')
-      .ilike('slug', data.orgCode.trim())
-      .single()
-
-    if (orgError || !org) {
-      setError('Organization not found. Check your school code.')
+    // Validate COPPA consent for students
+    if (resolvedRole === 'student' && !data.ageConsent) {
+      setError('You must confirm the student is 13 or older, or that the school has obtained parental consent.')
       return
     }
 
-    const orgData = org as { id: string; name: string }
+    // Resolve org and role from the join code
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: lookup, error: lookupError } = await (supabase as any)
+      .rpc('lookup_org_by_signup_code', { code: data.orgCode.trim() })
+
+    if (lookupError || !lookup?.org_id) {
+      setError('Invalid join code. Check the code your teacher or admin provided.')
+      return
+    }
 
     const { error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
-          organization_id: orgData.id,
-          role: 'student',
+          organization_id: lookup.org_id,
+          role: lookup.assigned_role,
           first_name: data.firstName,
           last_name: data.lastName,
         },
@@ -81,10 +100,10 @@ export default function SignupPage() {
       return
     }
 
-    setSuccess(true)
+    setSuccess(lookup.assigned_role === 'teacher' ? 'teacher' : 'student')
   }
 
-  if (success) {
+  if (success === 'student') {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -107,11 +126,34 @@ export default function SignupPage() {
     )
   }
 
+  if (success === 'teacher') {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl">Account Submitted</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert>
+            <AlertDescription>
+              Your account is pending approval. Your school admin will activate your account shortly. Once approved, you can sign in.
+            </AlertDescription>
+          </Alert>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Already approved?{' '}
+            <Link href="/login" className="text-primary hover:underline underline-offset-4">
+              Sign in
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl">Create Account</CardTitle>
-        <CardDescription>Sign up with your school code to get started</CardDescription>
+        <CardDescription>Enter your join code to get started</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
@@ -198,41 +240,48 @@ export default function SignupPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="orgCode">School Code</Label>
+            <Label htmlFor="orgCode">Join Code</Label>
             <Input
               id="orgCode"
               type="text"
               autoComplete="off"
-              placeholder="e.g. lincoln-high"
+              placeholder="e.g. xk7mp2qr"
               aria-invalid={!!errors.orgCode}
-              {...register('orgCode')}
+              {...register('orgCode', { onBlur: handleCodeBlur })}
             />
             {errors.orgCode && (
               <p className="text-sm text-destructive">{errors.orgCode.message}</p>
             )}
-            <p className="text-xs text-muted-foreground">Ask your teacher for your school code.</p>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
-                {...register('ageConsent')}
-              />
-              <span className="text-sm text-muted-foreground leading-snug">
-                I confirm this student is 13 years of age or older, or that the school has obtained
-                verifiable parental consent as required by{' '}
-                <a href="/coppa" className="text-primary hover:underline underline-offset-4" target="_blank">
-                  COPPA
-                </a>
-                .
-              </span>
-            </label>
-            {errors.ageConsent && (
-              <p className="text-sm text-destructive">{errors.ageConsent.message}</p>
+            {resolvedRole === 'student' && (
+              <p className="text-xs text-green-600 dark:text-green-400">Student join code ✓</p>
+            )}
+            {resolvedRole === 'teacher' && (
+              <p className="text-xs text-blue-600 dark:text-blue-400">Staff join code ✓</p>
+            )}
+            {!resolvedRole && (
+              <p className="text-xs text-muted-foreground">Ask your teacher or school admin for your join code.</p>
             )}
           </div>
+
+          {resolvedRole === 'student' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
+                  {...register('ageConsent')}
+                />
+                <span className="text-sm text-muted-foreground leading-snug">
+                  I confirm this student is 13 years of age or older, or that the school has obtained
+                  verifiable parental consent as required by{' '}
+                  <a href="/coppa" className="text-primary hover:underline underline-offset-4" target="_blank">
+                    COPPA
+                  </a>
+                  .
+                </span>
+              </label>
+            </div>
+          )}
 
           <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? (
@@ -254,5 +303,13 @@ export default function SignupPage() {
         </form>
       </CardContent>
     </Card>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   )
 }
