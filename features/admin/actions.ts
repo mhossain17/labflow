@@ -144,6 +144,7 @@ export async function approveStaffMember(profileId: string): Promise<void> {
   if (!profile || !['school_admin', 'super_admin'].includes(profile.role)) {
     throw new Error('Unauthorized')
   }
+  if (!profile.organization_id) throw new Error('No organization')
 
   const supabase = await createClient()
   const { error } = await supabase
