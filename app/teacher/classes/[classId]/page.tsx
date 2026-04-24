@@ -27,7 +27,9 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
 
   if (!cls) notFound()
 
-  const enrollments = cls.class_enrollments ?? []
+  const allEnrollments = cls.class_enrollments ?? []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const activeCount = allEnrollments.filter((e: any) => e.status !== 'pending').length
   const classTeachers = cls.class_teachers ?? []
   const canManageRoster = !!permissions?.can_manage_roster
 
@@ -95,12 +97,12 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
           <h2 className="text-lg font-semibold">
             Students
             <span className="ml-2 text-sm font-normal text-muted-foreground">
-              ({enrollments.length})
+              ({activeCount}{allEnrollments.length > activeCount ? ` + ${allEnrollments.length - activeCount} pending` : ''})
             </span>
           </h2>
         </div>
-        {canManageRoster && <AddStudentForm classId={classId} />}
-        <EnrollmentTable classId={classId} enrollments={enrollments} canManageRoster={canManageRoster} />
+        {canManageRoster && <AddStudentForm classId={classId} orgId={profile.organization_id ?? ''} />}
+        <EnrollmentTable classId={classId} enrollments={allEnrollments} canManageRoster={canManageRoster} />
       </section>
 
       {/* Assigned Labs */}

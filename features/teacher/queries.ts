@@ -85,7 +85,7 @@ export async function getClassWithEnrollments(classId: string) {
     .from('classes')
     .select(`
       *,
-      class_enrollments(*, profiles(id, first_name, last_name, avatar_url)),
+      class_enrollments(id, student_id, invited_email, status, enrolled_at, profiles(id, first_name, last_name, avatar_url)),
       class_teachers(
         id, teacher_id, class_role,
         can_manage_roster, can_manage_assignments, can_manage_grades, can_edit_class_settings,
@@ -102,7 +102,7 @@ export async function getClassWithEnrollments(classId: string) {
     .from('classes')
     .select(`
       *,
-      class_enrollments(*, profiles(id, first_name, last_name, avatar_url))
+      class_enrollments(id, student_id, invited_email, status, enrolled_at, profiles(id, first_name, last_name, avatar_url))
     `)
     .eq('id', classId)
     .single()

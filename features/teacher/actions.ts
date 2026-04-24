@@ -69,7 +69,6 @@ export async function enrollStudent(classId: string, studentId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  // Check not already enrolled
   const { data: existing } = await db
     .from('class_enrollments')
     .select('id')
@@ -79,12 +78,24 @@ export async function enrollStudent(classId: string, studentId: string) {
   if (existing) return { already: true }
   const { error } = await db
     .from('class_enrollments')
-    .insert({ class_id: classId, student_id: studentId })
+    .insert({ class_id: classId, student_id: studentId, status: 'active' })
   if (error) throw error
   revalidatePath(`/teacher/classes/${classId}`)
   return { ok: true }
 }
 
+export async function removeEnrollmentById(enrollmentId: string, classId: string) {
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from('class_enrollments')
+    .delete()
+    .eq('id', enrollmentId)
+  if (error) throw error
+  revalidatePath(`/teacher/classes/${classId}`)
+}
+
+/** @deprecated Use removeEnrollmentById instead */
 export async function unenrollStudent(classId: string, studentId: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,13 +112,150 @@ export async function lookupProfileByEmail(email: string) {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  // Look up auth user by email via profiles (email stored on auth.users, joined via id)
   const { data } = await db
     .from('profiles')
-    .select('id, first_name, last_name, role')
+    .select('id, first_name, last_name, role, email')
     .eq('email', email)
     .maybeSingle()
   return data
+}
+
+export async function searchStudentsByNameOrEmail(
+  query: string,
+  orgId: string,
+  classId: string
+) {
+  if (!query || query.trim().length < 2) return []
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+
+  // Get already-enrolled student IDs (active) for this class
+  const { data: enrolled } = await db
+    .from('class_enrollments')
+    .select('student_id, invited_email')
+    .eq('class_id', classId)
+
+  const enrolledStudentIds = new Set<string>(
+    (enrolled ?? []).filter((e: { student_id: string | null }) => e.student_id).map((e: { student_id: string }) => e.student_id)
+  )
+  const enrolledEmails = new Set<string>(
+    (enrolled ?? []).filter((e: { invited_email: string | null }) => e.invited_email).map((e: { invited_email: string }) => e.invited_email.toLowerCase())
+  )
+
+  const term = query.trim()
+
+  const { data } = await db
+    .from('profiles')
+    .select('id, first_name, last_name, email, role')
+    .eq('organization_id', orgId)
+    .eq('role', 'student')
+    .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,email.ilike.%${term}%`)
+    .limit(10)
+
+  return (data ?? [])
+    .filter((p: { id: string; email: string | null }) =>
+      !enrolledStudentIds.has(p.id) &&
+      !(p.email && enrolledEmails.has(p.email.toLowerCase()))
+    )
+    .map((p: { id: string; first_name: string; last_name: string; email: string | null }) => ({
+      id: p.id,
+      first_name: p.first_name,
+      last_name: p.last_name,
+      email: p.email ?? '',
+    }))
+}
+
+export async function enrollOrInviteByEmail(
+  classId: string,
+  email: string,
+  orgId: string
+) {
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const normalised = email.trim().toLowerCase()
+
+  // Check for existing enrollment (active or pending)
+  const { data: existing } = await db
+    .from('class_enrollments')
+    .select('id, status')
+    .eq('class_id', classId)
+    .or(`invited_email.eq.${normalised},student_id.eq.(select id from profiles where email = '${normalised}' limit 1)`)
+    .maybeSingle()
+
+  if (existing) return { already: true, status: existing.status as string }
+
+  // Look up profile by email
+  const { data: profile } = await db
+    .from('profiles')
+    .select('id, first_name, last_name, role, organization_id')
+    .eq('email', normalised)
+    .maybeSingle()
+
+  if (profile) {
+    if (profile.role !== 'student') return { wrongRole: profile.role as string }
+    if (profile.organization_id !== orgId) return { wrongOrg: true }
+    // Active enrollment
+    const { data: alreadyEnrolled } = await db
+      .from('class_enrollments')
+      .select('id')
+      .eq('class_id', classId)
+      .eq('student_id', profile.id)
+      .maybeSingle()
+    if (alreadyEnrolled) return { already: true, status: 'active' }
+    const { error } = await db.from('class_enrollments').insert({
+      class_id: classId,
+      student_id: profile.id,
+      status: 'active',
+    })
+    if (error) throw error
+    revalidatePath(`/teacher/classes/${classId}`)
+    return {
+      ok: true,
+      pending: false,
+      name: `${profile.first_name} ${profile.last_name}`,
+    }
+  }
+
+  // No account yet — create pending enrollment
+  const { data: pendingExisting } = await db
+    .from('class_enrollments')
+    .select('id')
+    .eq('class_id', classId)
+    .eq('invited_email', normalised)
+    .eq('status', 'pending')
+    .maybeSingle()
+  if (pendingExisting) return { already: true, status: 'pending' }
+
+  const { error } = await db.from('class_enrollments').insert({
+    class_id: classId,
+    student_id: null,
+    invited_email: normalised,
+    status: 'pending',
+  })
+  if (error) throw error
+  revalidatePath(`/teacher/classes/${classId}`)
+  return { ok: true, pending: true, name: normalised }
+}
+
+export async function bulkEnrollFromCSV(
+  classId: string,
+  emails: string[],
+  orgId: string
+) {
+  const results = await Promise.all(
+    emails.map(async (email) => {
+      try {
+        const result = await enrollOrInviteByEmail(classId, email, orgId)
+        return { email, ...result }
+      } catch {
+        return { email, error: true }
+      }
+    })
+  )
+  revalidatePath(`/teacher/classes/${classId}`)
+  return results
 }
 
 export async function assignLabToClass(
