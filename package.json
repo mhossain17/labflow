@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "demo-reel:preview": "npm --prefix demo-reel run preview --",
+    "demo-reel:voiceover": "npm --prefix demo-reel run voiceover --",
+    "demo-reel:render:16x9": "npm --prefix demo-reel run render:16x9 --",
+    "demo-reel:render:9x16": "npm --prefix demo-reel run render:9x16 --",
+    "demo-reel:render:16x9:voice": "npm --prefix demo-reel run render:16x9:voice --",
+    "demo-reel:render:9x16:voice": "npm --prefix demo-reel run render:9x16:voice --",
+    "demo-reel:validate": "npm --prefix demo-reel run validate --"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "problem-downtime",
+    "section": "problem",
+    "title": "Downtime Disrupts Momentum",
+    "startSeconds": 0,
+    "endSeconds": 18,
+    "audioFile": "01-problem-downtime.mp3",
+    "text": "In many classrooms, valuable minutes are lost while students wait for direction, repeat questions, or pause between lab steps."
+  },
+  {
+    "id": "problem-visibility",
+    "section": "problem",
+    "title": "Limited Step-Level Visibility",
+    "startSeconds": 18,
+    "endSeconds": 38,
+    "audioFile": "02-problem-visibility.mp3",
+    "text": "Teachers often cannot see, in real time, who is progressing, who is stuck, and which step is creating friction. That visibility gap drives downtime and uneven support."
+  },
+  {
+    "id": "solution-what-built",
+    "section": "solution",
+    "title": "What Was Built",
+    "startSeconds": 38,
+    "endSeconds": 50,
+    "audioFile": "03-solution-what-built.mp3",
+    "text": "LabFlow was built to close that gap with one connected workflow for planning, student work, and live instructional awareness."
+  },
+  {
+    "id": "solution-value",
+    "section": "solution",
+    "title": "Value Proposition",
+    "startSeconds": 50,
+    "endSeconds": 62,
+    "audioFile": "04-solution-value.mp3",
+    "text": "It gives teachers and administrators faster access to student steps, data, and trends, so class time is used for coaching and learning instead of manual tracking."
+  },
+  {
+    "id": "demo-teacher-builder",
+    "section": "demo",
+    "title": "Teacher Lab Builder",
+    "startSeconds": 62,
+    "endSeconds": 82,
+    "audioFile": "05-demo-teacher-builder.mp3",
+    "text": "Teachers can generate a full lab draft, refine instructions, and publish with clear objectives, materials, and grading criteria in one flow."
+  },
+  {
+    "id": "demo-student-prelab",
+    "section": "demo",
+    "title": "Student Pre-Lab Workflow",
+    "startSeconds": 82,
+    "endSeconds": 102,
+    "audioFile": "06-demo-student-prelab.mp3",
+    "text": "Students open assigned labs, complete pre-lab thinking, and move through structured steps that build reasoning through guided data collection."
+  },
+  {
+    "id": "demo-student-data",
+    "section": "demo",
+    "title": "Data Entry and Reflection",
+    "startSeconds": 102,
+    "endSeconds": 122,
+    "audioFile": "07-demo-student-data.mp3",
+    "text": "At each step, students record observations and reflect on evidence. Work is continuously captured, making progress visible without stopping instruction."
+  },
+  {
+    "id": "demo-stuck-guidance",
+    "section": "demo",
+    "title": "When a Student Gets Stuck",
+    "startSeconds": 122,
+    "endSeconds": 138,
+    "audioFile": "08-demo-stuck-guidance.mp3",
+    "text": "When a student gets stuck, guided help appears in context, and the teacher can still stay in control of instructional decisions."
+  },
+  {
+    "id": "demo-monitor-grouping",
+    "section": "demo",
+    "title": "Live Monitor and Grouping",
+    "startSeconds": 138,
+    "endSeconds": 148,
+    "audioFile": "09-demo-monitor-grouping.mp3",
+    "text": "From the live monitor, teachers can see status by student and by step, then quickly group learners for targeted support."
+  },
+  {
+    "id": "demo-analytics",
+    "section": "demo",
+    "title": "Analytics for Leaders",
+    "startSeconds": 148,
+    "endSeconds": 158,
+    "audioFile": "10-demo-analytics.mp3",
+    "text": "Administrators and instructional teams can review classroom analytics to spot patterns and support coaching conversations."
+  },
+  {
+    "id": "adoption-plan",
+    "section": "adoption",
+    "title": "30-Day Pilot Plan",
+    "startSeconds": 158,
+    "endSeconds": 172,
+    "audioFile": "11-adoption-plan.mp3",
+    "text": "A practical adoption plan starts with a 30-day pilot in two to three high school or higher classes that rely on step-based, data-rich work. Track completion rate, help-response time, and grading time saved."
+  },
+  {
+    "id": "cta",
+    "section": "cta",
+    "title": "Try the Demo Now",
+    "startSeconds": 172,
+    "endSeconds": 180,
+    "audioFile": "12-cta.mp3",
+    "text": "Create a more responsive classroom environment that values everyone’s time. Try the demo now at slash demo slash try."
+  }
+]

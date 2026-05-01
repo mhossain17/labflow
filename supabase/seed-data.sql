@@ -2,25 +2,10 @@
 -- Demo data seed
 -- Run AFTER:
 --   1. supabase db push (migrations)
---   2. supabase/seed.sql (org + feature flags)
---   3. npx ts-node --project tsconfig.json supabase/seed-users.ts (creates auth users + writes seed-ids.json)
+--   2. npx ts-node --project tsconfig.json supabase/seed-users.ts
 --
--- Before running this file, replace the four UUID placeholders below
--- with the values from supabase/seed-ids.json (written by seed-users.ts).
---
--- Replace these UUIDs with actual values from supabase/seed-ids.json:
---   TEACHER_ID   → value of "teacher" key
---   STUDENT1_ID  → value of "student1@westlake.demo" key
---   STUDENT2_ID  → value of "student2@westlake.demo" key
---
--- Example sed substitution (macOS):
---   TEACHER=$(jq -r '.teacher' supabase/seed-ids.json)
---   S1=$(jq -r '.["student1@westlake.demo"]' supabase/seed-ids.json)
---   S2=$(jq -r '.["student2@westlake.demo"]' supabase/seed-ids.json)
---   sed -e "s/TEACHER_ID_PLACEHOLDER/$TEACHER/g" \
---       -e "s/STUDENT1_ID_PLACEHOLDER/$S1/g"     \
---       -e "s/STUDENT2_ID_PLACEHOLDER/$S2/g"     \
---       supabase/seed-data.sql | supabase db query
+-- User IDs are resolved by email directly from public.profiles so this
+-- file can run without manual UUID substitution.
 -- ============================================================
 
 -- Fixed UUIDs for demo entities (stable across re-seeds)
@@ -41,7 +26,7 @@ INSERT INTO public.classes (
 ) VALUES (
   'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
   'aaaaaaaa-0000-0000-0000-000000000001'::uuid,
-  'TEACHER_ID_PLACEHOLDER'::uuid,
+  (SELECT id FROM public.profiles WHERE email = 'teacher@westlake.demo'),
   'Period 3 — Earth Science',
   'Introductory Earth Science for 8th graders. Focus on physical and chemical properties of matter.',
   '3',
@@ -60,13 +45,13 @@ INSERT INTO public.class_teachers (
   added_by
 ) VALUES (
   'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
-  'TEACHER_ID_PLACEHOLDER'::uuid,
+  (SELECT id FROM public.profiles WHERE email = 'teacher@westlake.demo'),
   'lead_teacher',
   true,
   true,
   true,
   true,
-  'TEACHER_ID_PLACEHOLDER'::uuid
+  (SELECT id FROM public.profiles WHERE email = 'teacher@westlake.demo')
 ) ON CONFLICT (class_id, teacher_id) DO UPDATE
 SET
   class_role = 'lead_teacher',
@@ -96,7 +81,7 @@ INSERT INTO public.labs (
 ) VALUES (
   'cccccccc-0001-0000-0000-000000000001'::uuid,
   'aaaaaaaa-0000-0000-0000-000000000001'::uuid,
-  'TEACHER_ID_PLACEHOLDER'::uuid,
+  (SELECT id FROM public.profiles WHERE email = 'teacher@westlake.demo'),
   'Measuring the Density of Water',
   'In this lab, students will use a triple-beam balance and a graduated cylinder to measure the mass and volume of water samples, then calculate density. Students will compare their experimental value to the accepted value of 1.00 g/mL and evaluate sources of error.',
   ARRAY[
@@ -266,7 +251,7 @@ INSERT INTO public.lab_assignments (
   'ffffffff-0001-0000-0000-000000000001'::uuid,
   'cccccccc-0001-0000-0000-000000000001'::uuid,
   'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
-  'TEACHER_ID_PLACEHOLDER'::uuid,
+  (SELECT id FROM public.profiles WHERE email = 'teacher@westlake.demo'),
   (CURRENT_DATE + INTERVAL '7 days')::date,
   null
 ) ON CONFLICT (id) DO NOTHING;
@@ -280,10 +265,33 @@ INSERT INTO public.class_enrollments (
 ) VALUES
 (
   'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
-  'STUDENT1_ID_PLACEHOLDER'::uuid
+  (SELECT id FROM public.profiles WHERE email = 'student1@westlake.demo')
 ),
 (
   'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
-  'STUDENT2_ID_PLACEHOLDER'::uuid
+  (SELECT id FROM public.profiles WHERE email = 'student2@westlake.demo')
+),
+(
+  'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
+  (SELECT id FROM public.profiles WHERE email = 'student3@westlake.demo')
+),
+(
+  'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
+  (SELECT id FROM public.profiles WHERE email = 'student4@westlake.demo')
+),
+(
+  'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
+  (SELECT id FROM public.profiles WHERE email = 'student5@westlake.demo')
+),
+(
+  'bbbbbbbb-0001-0000-0000-000000000001'::uuid,
+  (SELECT id FROM public.profiles WHERE email = 'student6@westlake.demo')
 )
 ON CONFLICT (class_id, student_id) DO NOTHING;
+
+-- ============================================================
+-- ACTIVATE TEACHER ACCOUNT FOR IMMEDIATE LOGIN
+-- ============================================================
+UPDATE public.profiles
+SET status = 'active'
+WHERE email = 'teacher@westlake.demo';

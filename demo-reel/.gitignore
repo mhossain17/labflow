@@ -1,0 +1,5 @@
+node_modules
+out
+.env
+public/voiceover/audio/*.mp3
+public/voiceover/audio/manifest.json

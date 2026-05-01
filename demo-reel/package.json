@@ -1,0 +1,28 @@
+{
+  "name": "labflow-demo-reel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "3-minute LabFlow Remotion demo reel for administrators and teachers.",
+  "scripts": {
+    "preview": "remotion studio src/index.ts",
+    "render:16x9": "remotion render src/index.ts LabFlowDemoReel16x9 out/labflow-demo-reel-16x9.mp4",
+    "render:9x16": "remotion render src/index.ts LabFlowDemoReel9x16 out/labflow-demo-reel-9x16.mp4",
+    "render:16x9:voice": "remotion render src/index.ts LabFlowDemoReel16x9 out/labflow-demo-reel-16x9-voice.mp4 --props='{\"withVoiceover\":true}'",
+    "render:9x16:voice": "remotion render src/index.ts LabFlowDemoReel9x16 out/labflow-demo-reel-9x16-voice.mp4 --props='{\"withVoiceover\":true}'",
+    "voiceover": "node --experimental-strip-types scripts/generate-voiceover.ts",
+    "validate": "node --experimental-strip-types scripts/validate-scenes.ts"
+  },
+  "dependencies": {
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@types/node": "^20.17.0",
+    "@types/react": "^19.1.0",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.3"
+  }
+}

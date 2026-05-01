@@ -2,6 +2,7 @@
 /**
  * Seed script: creates demo users via Supabase Admin Auth API.
  * Run AFTER migrations and static seed.sql.
+ * It also runs supabase/seed-data.sql and supabase/seed-demo-rich.sql.
  * Usage: npx ts-node --project tsconfig.json supabase/seed-users.ts
  *
  * Requires: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local
@@ -11,6 +12,7 @@ import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'
 import * as path from 'path'
 import * as fs from 'fs'
+import { execSync } from 'child_process'
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
 
@@ -158,7 +160,11 @@ async function seedUsers() {
   const outputPath = path.resolve(process.cwd(), 'supabase/seed-ids.json')
   fs.writeFileSync(outputPath, JSON.stringify(createdIds, null, 2))
   console.log(`\nUser IDs written to ${outputPath}`)
-  console.log('Next: run seed-data.sql referencing these UUIDs')
+
+  console.log('\nSeeding relational demo data...')
+  execSync('supabase db query --file supabase/seed-data.sql', { stdio: 'inherit' })
+  execSync('supabase db query --file supabase/seed-demo-rich.sql', { stdio: 'inherit' })
+  console.log('\nDemo seed completed.')
 }
 
 seedUsers().catch(console.error)
