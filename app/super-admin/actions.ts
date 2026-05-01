@@ -8,16 +8,34 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { UserRole } from '@/types/app'
 
-export async function impersonateOrg(orgId: string) {
-  const role = await getUserRole()
-  if (role !== 'super_admin') throw new Error('Unauthorized')
-
+async function setImpersonatedOrgCookie(orgId: string) {
   const cookieStore = await cookies()
   cookieStore.set(IMPERSONATE_COOKIE, orgId, {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
   })
+}
+
+export async function impersonateOrg(orgId: string) {
+  const role = await getUserRole()
+  if (role !== 'super_admin') throw new Error('Unauthorized')
+
+  const targetOrgId = orgId.trim()
+  if (!targetOrgId) throw new Error('Organization is required')
+
+  await setImpersonatedOrgCookie(targetOrgId)
+  redirect('/admin/branding')
+}
+
+export async function switchImpersonatedOrg(formData: FormData) {
+  const role = await getUserRole()
+  if (role !== 'super_admin') throw new Error('Unauthorized')
+
+  const orgId = String(formData.get('orgId') ?? '').trim()
+  if (!orgId) throw new Error('Organization is required')
+
+  await setImpersonatedOrgCookie(orgId)
   redirect('/admin/branding')
 }
 
@@ -86,13 +104,15 @@ export async function createOrganization(formData: FormData): Promise<{
     { organization_id: org.id, flag_key: 'analytics', enabled: true },
   ])
 
+  if (!org.student_code || !org.staff_code) {
+    throw new Error('Failed to generate organization join codes')
+  }
+
   revalidatePath('/super-admin')
   return {
     id: org.id,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    student_code: org.student_code!,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    staff_code: org.staff_code!,
+    student_code: org.student_code,
+    staff_code: org.staff_code,
   }
 }
 

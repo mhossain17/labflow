@@ -1,8 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
+import { getImpersonatedOrgId } from '@/lib/auth/session'
 import Image from 'next/image'
 import Link from 'next/link'
 import { TopNavUserMenu } from './TopNavUserMenu'
-import type { Profile, Organization } from '@/types/app'
+import type { Profile, Organization, UserRole } from '@/types/app'
+
+function getHomeHref(role: UserRole | null, impersonatedOrgId: string | null) {
+  if (role === 'teacher') return '/teacher/classes'
+  if (role === 'school_admin') return '/teacher/classes'
+  if (role === 'student') return '/student/labs'
+  if (role === 'super_admin') return impersonatedOrgId ? '/admin/branding' : '/super-admin'
+  return '/dashboard'
+}
 
 export async function TopNav() {
   const supabase = await createClient()
@@ -10,8 +19,12 @@ export async function TopNav() {
 
   let profile: Profile | null = null
   let org: Organization | null = null
+  let homeHref = '/dashboard'
 
   if (user) {
+    const role = (user.app_metadata?.role as UserRole | undefined) ?? null
+    const impersonatedOrgId = role === 'super_admin' ? await getImpersonatedOrgId() : null
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
     const { data: profileData } = await db
@@ -21,14 +34,18 @@ export async function TopNav() {
       .single()
     profile = profileData as Profile | null
 
-    if (profile?.organization_id) {
+    const orgIdForBranding = profile?.organization_id ?? impersonatedOrgId
+
+    if (orgIdForBranding) {
       const { data: orgData } = await db
         .from('organizations')
         .select('*')
-        .eq('id', profile.organization_id)
+        .eq('id', orgIdForBranding)
         .single()
       org = orgData as Organization | null
     }
+
+    homeHref = getHomeHref(role, impersonatedOrgId)
   }
 
   const fullName = profile
@@ -44,7 +61,7 @@ export async function TopNav() {
       {/* Left: org logo or name */}
       <div className="flex items-center gap-3">
         {org?.logo_url ? (
-          <Link href="/teacher/classes" className="flex items-center gap-2">
+          <Link href={homeHref} className="flex items-center gap-2">
             <Image
               src={org.logo_url}
               alt={org.name}
@@ -55,7 +72,7 @@ export async function TopNav() {
             <span className="font-bold text-primary text-lg">LabFlow</span>
           </Link>
         ) : (
-          <Link href="/teacher/classes" className="flex items-center gap-2">
+          <Link href={homeHref} className="flex items-center gap-2">
             <span className="font-bold text-primary text-lg">LabFlow</span>
           </Link>
         )}

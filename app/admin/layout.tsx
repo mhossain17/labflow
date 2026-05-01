@@ -4,7 +4,7 @@ import { TopNav } from '@/components/shared/TopNav'
 import { AdminSidebar } from './AdminSidebar'
 import { BrandingProvider } from '@/components/shared/BrandingProvider'
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner'
-import { getOrganization } from '@/features/admin/queries'
+import { getOrganization, listAllOrganizations } from '@/features/admin/queries'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const role = await requireRole(['school_admin', 'super_admin'])
@@ -20,12 +20,26 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const impersonatedOrgId = role === 'super_admin' ? await getImpersonatedOrgId() : null
+  let orgOptions: Array<{ id: string; name: string }> = []
+
+  if (role === 'super_admin' && impersonatedOrgId) {
+    try {
+      const orgs = await listAllOrganizations()
+      orgOptions = orgs.map(({ id, name }) => ({ id, name }))
+    } catch {
+      // Org list fetch failure is non-fatal — the banner can still show exit action
+    }
+  }
 
   return (
     <BrandingProvider org={org}>
       <div className="min-h-screen flex flex-col bg-background">
         {impersonatedOrgId && org && (
-          <ImpersonationBanner orgName={org.name} />
+          <ImpersonationBanner
+            orgName={org.name}
+            currentOrgId={impersonatedOrgId}
+            orgOptions={orgOptions}
+          />
         )}
         <TopNav />
         <div className="flex flex-1 overflow-hidden">
