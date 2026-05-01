@@ -35,8 +35,12 @@ export async function proxy(request: NextRequest) {
   // Role-based path protection
   if (user) {
     const role = user.app_metadata?.role as string | undefined
+    const isImpersonating = !!request.cookies.get('labflow_impersonate_user')?.value
+    const isAdmin = role === 'school_admin' || role === 'super_admin'
     for (const [pathPrefix, allowedRoles] of Object.entries(ROLE_PATHS)) {
       if (pathname.startsWith(pathPrefix) && role && !allowedRoles.includes(role)) {
+        // Admins with active impersonation session can access any route
+        if (isAdmin && isImpersonating) continue
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'
         return NextResponse.redirect(url)

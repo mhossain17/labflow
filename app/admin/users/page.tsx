@@ -49,7 +49,7 @@ export default async function UsersPage() {
             {activeUsers.length} active {activeUsers.length === 1 ? 'user' : 'users'}
           </p>
         </div>
-        <UserTable users={activeUsers} currentUserId={currentUserId} />
+        <UserTable users={activeUsers} currentUserId={currentUserId} canImpersonate />
       </div>
     </div>
   )

@@ -1,26 +1,35 @@
 import { ClassSection } from './ClassSection'
+import { XpDisplay } from './XpDisplay'
 
 interface StudentDashboardProps {
   firstName: string
   classes: any[]
   studentId: string
+  xp?: number
+  rank?: number | null
+  total?: number
 }
 
-export function StudentDashboard({ firstName, classes, studentId }: StudentDashboardProps) {
+export function StudentDashboard({ firstName, classes, studentId, xp = 0, rank, total }: StudentDashboardProps) {
   const allAssignments = classes.flatMap((c) => c.lab_assignments)
   const inProgress = allAssignments.filter((a) => a.lab_run && !a.lab_run.completed_at).length
   const complete = allAssignments.filter((a) => a.lab_run?.completed_at).length
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Welcome back, {firstName}!</h1>
-        <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-          <span>{classes.length} {classes.length === 1 ? 'class' : 'classes'}</span>
-          <span>·</span>
-          <span>{inProgress} in progress</span>
-          <span>·</span>
-          <span>{complete} complete</span>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Welcome back, {firstName}!</h1>
+          <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+            <span>{classes.length} {classes.length === 1 ? 'class' : 'classes'}</span>
+            <span>·</span>
+            <span>{inProgress} in progress</span>
+            <span>·</span>
+            <span>{complete} complete</span>
+          </div>
+        </div>
+        <div className="min-w-[220px]">
+          <XpDisplay xp={xp} rank={rank} total={total} />
         </div>
       </div>
 

@@ -9,10 +9,11 @@ import { notFound, redirect } from 'next/navigation'
 import { submitLab } from '@/features/lab-runner/actions'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { CheckCircle2, Clock, ArrowLeft } from 'lucide-react'
+import { CheckCircle2, Clock, ArrowLeft, Zap } from 'lucide-react'
 import { normalizeAndSortLabSteps } from '@/lib/labs/steps'
 import { getRubricItems } from '@/features/lab-builder/queries'
 import { SelfAssessment } from '@/components/student/lab-runner/SelfAssessment'
+import { XP_PER_STEP, XP_PER_LAB_COMPLETE, XP_ON_TIME_BONUS, XP_GRADE_BONUS, getLevel } from '@/lib/gamification'
 
 interface Props {
   params: Promise<{ labRunId: string }>
@@ -43,6 +44,24 @@ export default async function CompletePage({ params }: Props) {
 
   const isCompleted = !!run.completed_at
 
+  // Compute XP earned from this lab run
+  const completedStepsCount = stepResponses.filter((r: { completed: boolean }) => r.completed).length
+  let earnedXp = completedStepsCount * XP_PER_STEP
+  if (isCompleted) {
+    earnedXp += XP_PER_LAB_COMPLETE
+    const assignment = run.lab_assignments as { due_date: string | null } | null
+    if (assignment?.due_date && run.completed_at) {
+      const due = new Date(assignment.due_date)
+      due.setHours(23, 59, 59)
+      if (new Date(run.completed_at) <= due) earnedXp += XP_ON_TIME_BONUS
+    }
+  }
+  const letterGrade = grade?.letter_grade?.charAt(0)
+  if (letterGrade && XP_GRADE_BONUS[letterGrade] !== undefined) {
+    earnedXp += XP_GRADE_BONUS[letterGrade]
+  }
+  const earnedLevel = getLevel(earnedXp)
+
   async function handleSubmit() {
     'use server'
     await submitLab(labRunId)
@@ -61,6 +80,19 @@ export default async function CompletePage({ params }: Props) {
             <h1 className="text-3xl font-bold">Lab Complete!</h1>
             <p className="text-muted-foreground text-lg">{run.labs?.title}</p>
           </div>
+
+          {/* XP earned */}
+          {isCompleted && (
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20 px-6 py-3">
+              <Zap className="size-5 text-green-600 dark:text-green-400" />
+              <span className="font-bold text-green-700 dark:text-green-300 text-lg">
+                +{earnedXp} XP earned
+              </span>
+              <span className={`text-sm font-medium ${earnedLevel.colorClass}`}>
+                · {earnedLevel.emoji} {earnedLevel.name}
+              </span>
+            </div>
+          )}
 
           {/* Completion time */}
           {run.completed_at && (

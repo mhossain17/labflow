@@ -12,11 +12,16 @@ import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const envPath = resolve(__dirname, '../.env.local')
+const envPath = [resolve(__dirname, '../.env.local'), resolve(__dirname, '../.env')]
+  .find(p => { try { readFileSync(p); return true } catch { return false } })
+if (!envPath) { console.error('No .env.local or .env found'); process.exit(1) }
 const env = {}
 readFileSync(envPath, 'utf8').split('\n').forEach(line => {
-  const [key, ...rest] = line.split('=')
-  if (key && rest.length) env[key.trim()] = rest.join('=').trim()
+  const trimmed = line.trim()
+  if (!trimmed || trimmed.startsWith('#')) return
+  const idx = trimmed.indexOf('=')
+  if (idx < 0) return
+  env[trimmed.slice(0, idx).trim()] = trimmed.slice(idx + 1).trim()
 })
 
 const supabase = createClient(env['NEXT_PUBLIC_SUPABASE_URL'], env['SUPABASE_SERVICE_ROLE_KEY'], {
@@ -173,23 +178,19 @@ async function main() {
 
   // ── Step 3: enrollments ──
   console.log('\nStep 3: Enrollments')
+  // CLASS1 enrollments were already done by seed-all.mjs — only add new classes here
   const enrollments = [
-    // Period 3 Earth Science
-    { class_id: CLASS1_ID, student_id: s1Id },
-    { class_id: CLASS1_ID, student_id: s2Id },
-    { class_id: CLASS1_ID, student_id: s3Id },
-    { class_id: CLASS1_ID, student_id: s4Id },
-    { class_id: CLASS1_ID, student_id: s5Id },
-    { class_id: CLASS1_ID, student_id: s6Id },
     // Period 1 Biology
-    { class_id: CLASS2_ID, student_id: s3Id },
-    { class_id: CLASS2_ID, student_id: s5Id },
+    { class_id: CLASS2_ID, student_id: s3Id, status: 'active' },
+    { class_id: CLASS2_ID, student_id: s5Id, status: 'active' },
     // Period 5 Chemistry
-    { class_id: CLASS3_ID, student_id: s4Id },
-    { class_id: CLASS3_ID, student_id: s6Id },
+    { class_id: CLASS3_ID, student_id: s4Id, status: 'active' },
+    { class_id: CLASS3_ID, student_id: s6Id, status: 'active' },
   ]
   await step('All enrollments', async () => {
-    const { error } = await supabase.from('class_enrollments').upsert(enrollments, { onConflict: 'class_id,student_id' })
+    // Delete any stale rows first so this script is re-runnable
+    await supabase.from('class_enrollments').delete().in('class_id', [CLASS2_ID, CLASS3_ID])
+    const { error } = await supabase.from('class_enrollments').insert(enrollments)
     if (error) throw error
   })
 

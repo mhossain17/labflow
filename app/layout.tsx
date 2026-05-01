@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/shared/ThemeProvider'
 import { Toaster } from 'sonner'
+import { ImpersonationBanner } from '@/components/shared/ImpersonationBanner'
 
 export const metadata: Metadata = {
   title: 'LabFlow',
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem
           disableTransitionOnChange
         >
+          <ImpersonationBanner />
           {children}
           <Toaster richColors position="top-right" />
         </ThemeProvider>

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLabRun } from '@/hooks/useLabRun'
 import { markStepComplete, updateCurrentStep } from '@/features/lab-runner/actions'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import { motivationalMessage, XP_PER_STEP } from '@/lib/gamification'
 import {
   TriangleAlert,
   ChevronLeft,
@@ -46,6 +47,7 @@ export function StepRunner({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [completeError, setCompleteError] = useState<string | null>(null)
+  const [showXpFlash, setShowXpFlash] = useState(false)
 
   const fields: DataEntryFieldType[] = step.data_entry_fields ?? []
 
@@ -79,16 +81,29 @@ export function StepRunner({
     startTransition(async () => {
       await markStepComplete(labRunId, step.id, studentId)
       await updateCurrentStep(labRunId, stepNumber)
-      if (isLastStep) {
-        router.push(`/student/labs/${labRunId}/complete`)
-      } else {
-        router.push(`/student/labs/${labRunId}/step/${stepNumber + 1}`)
-      }
+      setShowXpFlash(true)
+      setTimeout(() => {
+        if (isLastStep) {
+          router.push(`/student/labs/${labRunId}/complete`)
+        } else {
+          router.push(`/student/labs/${labRunId}/step/${stepNumber + 1}`)
+        }
+      }, 1400)
     })
   }
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4 space-y-8">
+      {/* XP flash overlay */}
+      {showXpFlash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="bg-green-500 text-white rounded-2xl px-10 py-5 text-center shadow-2xl animate-bounce">
+            <p className="text-2xl font-bold">Step Complete!</p>
+            <p className="text-lg mt-1">+{XP_PER_STEP} XP ✨</p>
+          </div>
+        </div>
+      )}
+
       {/* Header progress */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -96,6 +111,7 @@ export function StepRunner({
           <span>{progress}%</span>
         </div>
         <Progress value={progress} className="h-1.5" />
+        <p className="text-xs text-muted-foreground/70 italic">{motivationalMessage(progress)}</p>
       </div>
 
       {/* Step title */}

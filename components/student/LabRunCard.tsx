@@ -78,6 +78,15 @@ export function LabRunCard({ run }: { run: Record<string, unknown> }) {
             <span>{progress}%</span>
           </div>
           <Progress value={progress} className="h-1.5" />
+          {!isComplete && (
+            <p className="text-xs text-muted-foreground/80 italic">
+              {progress === 0 && "Ready to start? Let's go! 💪"}
+              {progress > 0 && progress < 30 && 'Just getting started — keep going! 🌱'}
+              {progress >= 30 && progress < 60 && "You're making great progress! 🚀"}
+              {progress >= 60 && progress < 85 && 'Almost there — keep pushing! 🔥'}
+              {progress >= 85 && "Final stretch! You've got this! ⚡"}
+            </p>
+          )}
         </div>
       )}
     </div>

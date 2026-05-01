@@ -18,18 +18,23 @@ import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-// Load .env.local manually
-const envPath = resolve(__dirname, '../.env.local')
+// Load .env.local or .env
+const envPath = [
+  resolve(__dirname, '../.env.local'),
+  resolve(__dirname, '../.env'),
+].find(p => { try { readFileSync(p); return true } catch { return false } })
 const env = {}
-try {
-  readFileSync(envPath, 'utf8').split('\n').forEach(line => {
-    const [key, ...rest] = line.split('=')
-    if (key && rest.length) env[key.trim()] = rest.join('=').trim()
-  })
-} catch {
-  console.error('Could not read .env.local — make sure it exists at project root')
+if (!envPath) {
+  console.error('Could not read .env.local or .env — make sure one exists at project root')
   process.exit(1)
 }
+readFileSync(envPath, 'utf8').split('\n').forEach(line => {
+  const trimmed = line.trim()
+  if (!trimmed || trimmed.startsWith('#')) return
+  const idx = trimmed.indexOf('=')
+  if (idx < 0) return
+  env[trimmed.slice(0, idx).trim()] = trimmed.slice(idx + 1).trim()
+})
 
 const SUPABASE_URL = env['NEXT_PUBLIC_SUPABASE_URL']
 const SERVICE_KEY  = env['SUPABASE_SERVICE_ROLE_KEY']
@@ -282,8 +287,10 @@ async function seedAssignment(teacherId) {
 
 // ─── 9. Enrollments ───────────────────────────────────────────
 async function seedEnrollments(studentIds) {
-  const rows = studentIds.map((studentId) => ({ class_id: CLASS_ID, student_id: studentId }))
-  const { error } = await supabase.from('class_enrollments').upsert(rows, { onConflict: 'class_id,student_id' })
+  // Use insert with ignoreDuplicates — the partial unique index on (class_id, student_id)
+  // doesn't support ON CONFLICT column syntax, so we skip duplicates instead.
+  const rows = studentIds.map((studentId) => ({ class_id: CLASS_ID, student_id: studentId, status: 'active' }))
+  const { error } = await supabase.from('class_enrollments').insert(rows, { ignoreDuplicates: true })
   if (error) throw error
 }
 

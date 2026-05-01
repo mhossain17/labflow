@@ -11,6 +11,7 @@ import { MonitorStats } from './MonitorStats'
 import { HelpRequestPanel } from './HelpRequestPanel'
 import { StudentDetailSheet } from './StudentDetailSheet'
 import { ClassDataOverview } from './ClassDataOverview'
+import { Leaderboard } from './Leaderboard'
 import { Badge } from '@/components/ui/badge'
 import { Radio, ChevronDown } from 'lucide-react'
 
@@ -33,7 +34,7 @@ interface MonitorDashboardProps {
   initialEscalatedHelp: EscalatedHelpRequest[]
 }
 
-type Tab = 'live' | 'data'
+type Tab = 'live' | 'data' | 'leaderboard'
 
 export function MonitorDashboard({
   labId,
@@ -210,6 +211,7 @@ export function MonitorDashboard({
         {([
           { key: 'live', label: 'Live Monitor' },
           { key: 'data', label: 'Class Data' },
+          { key: 'leaderboard', label: '🏆 Leaderboard' },
         ] as { key: Tab; label: string }[]).map(tab => (
           <button
             key={tab.key}
@@ -225,10 +227,14 @@ export function MonitorDashboard({
         ))}
       </div>
 
-      {activeTab === 'live' ? (
+      {activeTab === 'live' && (
         <MonitorGrid runs={runsList} totalSteps={totalSteps} onStudentClick={handleStudentClick} />
-      ) : (
+      )}
+      {activeTab === 'data' && (
         <ClassDataOverview assignmentId={assignmentId} labSteps={labSteps} runs={runsList} />
+      )}
+      {activeTab === 'leaderboard' && (
+        <Leaderboard runs={runsList} totalSteps={totalSteps} />
       )}
 
       {/* Student detail sheet */}
