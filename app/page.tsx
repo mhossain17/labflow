@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { LandingHome } from '@/components/marketing/LandingHome'
-import { isDemoGatewayEmail } from '@/lib/demo/accounts'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -9,9 +8,6 @@ export default async function Home() {
 
   if (!user) {
     return <LandingHome />
-  }
-  if (isDemoGatewayEmail(user.email)) {
-    redirect('/demo/control')
   }
 
   const role = user.app_metadata?.role as string | undefined

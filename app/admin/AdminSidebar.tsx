@@ -20,16 +20,40 @@ const classRosterLinks = [
 
 const teacherLinks = [
   { href: '/teacher/classes', label: 'Classes', icon: LayoutList },
-  { href: '/teacher/labs', label: 'Labs', icon: FlaskConical },
-  { href: '/teacher/materials', label: 'Materials', icon: BookOpen },
+  {
+    href: '/teacher/labs',
+    label: 'Labs',
+    icon: FlaskConical,
+    activeMatchHrefs: ['/teacher/labs', '/teacher/materials'],
+  },
+  { href: '/teacher/grades', label: 'Grades', icon: GraduationCap },
   { href: '/teacher/analytics', label: 'Analytics', icon: BarChart3 },
+]
+
+const labSubLinks = [
+  { href: '/teacher/materials', label: 'Materials', icon: BookOpen },
 ]
 
 export function AdminSidebar() {
   const pathname = usePathname()
 
-  function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType }) {
-    const isActive = pathname === href || pathname.startsWith(href + '/')
+  function isPathActive(href: string) {
+    return pathname === href || pathname.startsWith(href + '/')
+  }
+
+  function NavLink({
+    href,
+    label,
+    icon: Icon,
+    activeMatchHrefs,
+  }: {
+    href: string
+    label: string
+    icon: React.ElementType
+    activeMatchHrefs?: string[]
+  }) {
+    const matchHrefs = activeMatchHrefs ?? [href]
+    const isActive = matchHrefs.some((matchHref) => isPathActive(matchHref))
     return (
       <Link
         href={href}
@@ -61,7 +85,18 @@ export function AdminSidebar() {
       <div className="border-t border-border pt-3">
         <p className="px-3 mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Teacher</p>
         <nav className="flex flex-col gap-1">
-          {teacherLinks.map(link => <NavLink key={link.href} {...link} />)}
+          {teacherLinks.map((link) => (
+            link.href === '/teacher/labs'
+              ? (
+                <div key={link.href} className="flex flex-col gap-1">
+                  <NavLink {...link} />
+                  <div className="ml-6 flex flex-col gap-1">
+                    {labSubLinks.map((subLink) => <NavLink key={subLink.href} {...subLink} />)}
+                  </div>
+                </div>
+              )
+              : <NavLink key={link.href} {...link} />
+          ))}
         </nav>
       </div>
     </aside>

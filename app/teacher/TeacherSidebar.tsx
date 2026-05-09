@@ -7,10 +7,18 @@ import { LayoutList, FlaskConical, BookOpen, BarChart3, Paintbrush, Users, Setti
 
 const teacherLinks = [
   { href: '/teacher/classes', label: 'Classes', icon: LayoutList },
-  { href: '/teacher/labs', label: 'Labs', icon: FlaskConical },
+  {
+    href: '/teacher/labs',
+    label: 'Labs',
+    icon: FlaskConical,
+    activeMatchHrefs: ['/teacher/labs', '/teacher/materials'],
+  },
   { href: '/teacher/grades', label: 'Grades', icon: GraduationCap },
-  { href: '/teacher/materials', label: 'Materials', icon: BookOpen },
   { href: '/teacher/analytics', label: 'Analytics', icon: BarChart3 },
+]
+
+const labSubLinks = [
+  { href: '/teacher/materials', label: 'Materials', icon: BookOpen },
 ]
 
 const adminLinks = [
@@ -30,8 +38,23 @@ export function TeacherSidebar({ role }: TeacherSidebarProps) {
   const isOnAdminPath = pathname.startsWith('/admin')
   const [adminOpen, setAdminOpen] = useState(isOnAdminPath)
 
-  function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType }) {
-    const isActive = pathname === href || pathname.startsWith(href + '/')
+  function isPathActive(href: string) {
+    return pathname === href || pathname.startsWith(href + '/')
+  }
+
+  function NavLink({
+    href,
+    label,
+    icon: Icon,
+    activeMatchHrefs,
+  }: {
+    href: string
+    label: string
+    icon: React.ElementType
+    activeMatchHrefs?: string[]
+  }) {
+    const matchHrefs = activeMatchHrefs ?? [href]
+    const isActive = matchHrefs.some((matchHref) => isPathActive(matchHref))
     return (
       <Link
         href={href}
@@ -52,7 +75,18 @@ export function TeacherSidebar({ role }: TeacherSidebarProps) {
   return (
     <aside className="w-56 border-r bg-card flex flex-col p-4 shrink-0">
       <nav className="flex flex-col gap-1 flex-1">
-        {teacherLinks.map(link => <NavLink key={link.href} {...link} />)}
+        {teacherLinks.map((link) => (
+          link.href === '/teacher/labs'
+            ? (
+              <div key={link.href} className="flex flex-col gap-1">
+                <NavLink {...link} />
+                <div className="ml-6 flex flex-col gap-1">
+                  {labSubLinks.map((subLink) => <NavLink key={subLink.href} {...subLink} />)}
+                </div>
+              </div>
+            )
+            : <NavLink key={link.href} {...link} />
+        ))}
       </nav>
 
       {isAdmin && (

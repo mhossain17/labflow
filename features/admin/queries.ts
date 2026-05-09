@@ -63,6 +63,43 @@ export async function listProfilesByOrg(orgId: string) {
   }))
 }
 
+export type ImpersonableUserOption = {
+  id: string
+  first_name: string
+  last_name: string
+  role: 'teacher' | 'student'
+}
+
+export async function listImpersonableUsersByOrg(orgId: string): Promise<ImpersonableUserOption[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name, role, status')
+    .eq('organization_id', orgId)
+    .eq('status', 'active')
+    .in('role', ['teacher', 'student'])
+    .order('last_name', { ascending: true })
+    .order('first_name', { ascending: true })
+  if (error) throw error
+
+  const rows = (data ?? []) as Array<{
+    id: string
+    first_name: string
+    last_name: string
+    role: string
+    status: string
+  }>
+
+  return rows
+    .map((row) => ({
+      id: row.id,
+      first_name: row.first_name,
+      last_name: row.last_name,
+      role: parseRole(row.role),
+    }))
+    .filter((row): row is ImpersonableUserOption => row.role === 'teacher' || row.role === 'student')
+}
+
 export async function listFeatureFlags(orgId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase

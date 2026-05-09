@@ -2,11 +2,15 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { getUserRole } from '@/lib/auth/session'
-import { IMPERSONATE_COOKIE } from '@/lib/auth/session'
+import { getUserRole, getRealProfile, IMPERSONATE_COOKIE, IMPERSONATE_USER_COOKIE } from '@/lib/auth/session'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { UserRole } from '@/types/app'
+
+async function requireRealSuperAdmin() {
+  const realProfile = await getRealProfile()
+  if (!realProfile || realProfile.role !== 'super_admin') throw new Error('Unauthorized')
+}
 
 async function setImpersonatedOrgCookie(orgId: string) {
   const cookieStore = await cookies()
@@ -17,32 +21,88 @@ async function setImpersonatedOrgCookie(orgId: string) {
   })
 }
 
+async function setImpersonatedUserCookie(userId: string) {
+  const cookieStore = await cookies()
+  cookieStore.set(IMPERSONATE_USER_COOKIE, userId, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60, // 1 hour
+  })
+}
+
 export async function impersonateOrg(orgId: string) {
-  const role = await getUserRole()
-  if (role !== 'super_admin') throw new Error('Unauthorized')
+  await requireRealSuperAdmin()
 
   const targetOrgId = orgId.trim()
   if (!targetOrgId) throw new Error('Organization is required')
 
   await setImpersonatedOrgCookie(targetOrgId)
+  const cookieStore = await cookies()
+  cookieStore.delete(IMPERSONATE_USER_COOKIE)
   redirect('/admin/branding')
 }
 
 export async function switchImpersonatedOrg(formData: FormData) {
-  const role = await getUserRole()
-  if (role !== 'super_admin') throw new Error('Unauthorized')
+  await requireRealSuperAdmin()
 
   const orgId = String(formData.get('orgId') ?? '').trim()
   if (!orgId) throw new Error('Organization is required')
 
   await setImpersonatedOrgCookie(orgId)
+  const cookieStore = await cookies()
+  cookieStore.delete(IMPERSONATE_USER_COOKIE)
   redirect('/admin/branding')
 }
 
 export async function stopImpersonation() {
+  await requireRealSuperAdmin()
   const cookieStore = await cookies()
   cookieStore.delete(IMPERSONATE_COOKIE)
+  cookieStore.delete(IMPERSONATE_USER_COOKIE)
   redirect('/super-admin')
+}
+
+export async function switchImpersonatedUser(formData: FormData) {
+  await requireRealSuperAdmin()
+
+  const orgId = String(formData.get('orgId') ?? '').trim()
+  const userId = String(formData.get('userId') ?? '').trim()
+  if (!orgId) throw new Error('Organization is required')
+  if (!userId) throw new Error('User is required')
+
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+
+  const { data: targetOrg } = await db
+    .from('organizations')
+    .select('id')
+    .eq('id', orgId)
+    .single()
+  if (!targetOrg) throw new Error('Organization not found')
+
+  const { data: targetUser } = await db
+    .from('profiles')
+    .select('id, role, status, organization_id')
+    .eq('id', userId)
+    .single()
+
+  if (!targetUser) throw new Error('User not found')
+  if (targetUser.organization_id !== orgId) throw new Error('User is not in the selected organization')
+  if (targetUser.status !== 'active') throw new Error('User must be active to impersonate')
+  if (targetUser.role !== 'teacher' && targetUser.role !== 'student') {
+    throw new Error('Can only impersonate teachers or students')
+  }
+
+  await setImpersonatedOrgCookie(orgId)
+  await setImpersonatedUserCookie(userId)
+
+  const roleRedirects: Record<string, string> = {
+    teacher: '/teacher',
+    student: '/student',
+  }
+  redirect(roleRedirects[targetUser.role] ?? '/dashboard')
 }
 
 export async function createOrganization(formData: FormData): Promise<{
