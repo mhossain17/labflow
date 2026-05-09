@@ -105,7 +105,7 @@ function normalizeGeneratedLab(rawInput: unknown, prompt: string) {
     (Array.isArray(raw.lab_steps) ? raw.lab_steps : null) ??
     []
 
-  let steps: GeneratedLabStep[] = (rawStepsSource as Array<Record<string, unknown> | string>)
+  const mappedSteps: Array<GeneratedLabStep | null> = (rawStepsSource as Array<Record<string, unknown> | string>)
     .map((step, i) => {
       if (typeof step === 'string') {
         const instructions = asTrimmedString(step)
@@ -158,7 +158,10 @@ function normalizeGeneratedLab(rawInput: unknown, prompt: string) {
         data_entry_fields,
       }
     })
-    .filter((step): step is GeneratedLabStep => step !== null)
+
+  let steps: GeneratedLabStep[] = mappedSteps.filter(
+    (step): step is GeneratedLabStep => step !== null
+  )
 
   if (steps.length === 0) {
     const textFallback =
