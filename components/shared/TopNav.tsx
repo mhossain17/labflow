@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getImpersonatedOrgId } from '@/lib/auth/session'
+import { getImpersonatedOrgId, getUserRole } from '@/lib/auth/session'
 import Image from 'next/image'
 import Link from 'next/link'
 import { TopNavUserMenu } from './TopNavUserMenu'
@@ -22,8 +22,10 @@ export async function TopNav() {
   let homeHref = '/dashboard'
 
   if (user) {
-    const role = (user.app_metadata?.role as UserRole | undefined) ?? null
-    const impersonatedOrgId = role === 'super_admin' ? await getImpersonatedOrgId() : null
+    const realRole = (user.app_metadata?.role as UserRole | undefined) ?? null
+    const impersonatedOrgId = realRole === 'super_admin' ? await getImpersonatedOrgId() : null
+    // Use the effective role (impersonated when active) so the home link goes to the right place
+    const role = await getUserRole()
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
