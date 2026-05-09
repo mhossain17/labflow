@@ -63,7 +63,7 @@ export function NewLabClient({ aiEnabled }: Props) {
       const { id: teacherId, organization_id } = await meRes.json()
 
       // 3. Create lab + all steps + all questions in one atomic server action
-      const lab = await createLabWithContent({
+      const result = await createLabWithContent({
         title: generated.title,
         teacher_id: teacherId,
         organization_id,
@@ -78,8 +78,14 @@ export function NewLabClient({ aiEnabled }: Props) {
         pre_lab_questions: generated.pre_lab_questions ?? [],
       })
 
+      if (!result.ok) {
+        setError(result.error)
+        setPhase('idle')
+        return
+      }
+
       setPhase('done')
-      router.push(`/teacher/labs/${lab.id}/edit?step=1`)
+      router.push(`/teacher/labs/${result.lab.id}/edit?step=1`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setPhase('idle')

@@ -128,50 +128,101 @@ export async function createLabWithContent(data: {
   }>
 }) {
   const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
 
   const { steps, pre_lab_questions, ...labData } = data
+  const safeSteps = (Array.isArray(steps) ? steps : [])
+    .map((s) => ({
+      title: String(s?.title ?? '').trim(),
+      instructions: String(s?.instructions ?? '').trim(),
+      checkpoint: typeof s?.checkpoint === 'string' ? s.checkpoint : null,
+      reflection_prompt: typeof s?.reflection_prompt === 'string' ? s.reflection_prompt : null,
+      troubleshooting: typeof s?.troubleshooting === 'string' ? s.troubleshooting : null,
+      data_entry_fields: Array.isArray(s?.data_entry_fields) ? s.data_entry_fields : null,
+    }))
+    .filter((s) => s.title.length > 0 && s.instructions.length > 0)
 
-  const { data: lab, error: labError } = await db
-    .from('labs')
-    .insert({ status: 'draft', ...labData })
-    .select()
-    .single()
-  if (labError) throw labError
+  if (safeSteps.length === 0) {
+    return {
+      ok: false as const,
+      error: 'AI generation returned no valid procedure steps. Please try again.',
+    }
+  }
 
-  if (steps.length > 0) {
+  const safeQuestions = (Array.isArray(pre_lab_questions) ? pre_lab_questions : [])
+    .map((q) => {
+      const rawType = String(q?.question_type ?? 'short_answer')
+      const question_type =
+        rawType === 'multiple_choice' || rawType === 'true_false' || rawType === 'short_answer'
+          ? rawType
+          : 'short_answer'
+
+      const options =
+        question_type === 'multiple_choice' && Array.isArray(q?.options)
+          ? q.options.filter((o) => typeof o === 'string' && o.trim().length > 0)
+          : null
+
+      return {
+        question_text: String(q?.question_text ?? '').trim(),
+        question_type,
+        options,
+      }
+    })
+    .filter((q) => q.question_text.length > 0)
+
+  let labId: string | null = null
+
+  try {
+    const { data: lab, error: labError } = await db
+      .from('labs')
+      .insert({ status: 'draft', ...labData })
+      .select()
+      .single()
+    if (labError) throw labError
+    labId = lab.id as string
+
     const { error: stepsError } = await db.from('lab_steps').insert(
-      steps.map((s, i) => ({
+      safeSteps.map((s, i) => ({
         lab_id: lab.id,
         title: s.title,
         instructions: s.instructions,
-        checkpoint: s.checkpoint ?? null,
-        reflection_prompt: s.reflection_prompt ?? null,
-        troubleshooting: s.troubleshooting ?? null,
-        data_entry_fields: s.data_entry_fields ?? null,
+        checkpoint: s.checkpoint,
+        reflection_prompt: s.reflection_prompt,
+        troubleshooting: s.troubleshooting,
+        data_entry_fields: s.data_entry_fields,
         step_number: i + 1,
       }))
     )
     if (stepsError) throw stepsError
-  }
 
-  if (pre_lab_questions.length > 0) {
-    const { error: questionsError } = await db.from('pre_lab_questions').insert(
-      pre_lab_questions.map((q, i) => ({
-        lab_id: lab.id,
-        question_text: q.question_text,
-        question_type: q.question_type,
-        options: q.options ?? null,
-        required: true,
-        position: i,
-      }))
-    )
-    if (questionsError) throw questionsError
-  }
+    if (safeQuestions.length > 0) {
+      const { error: questionsError } = await db.from('pre_lab_questions').insert(
+        safeQuestions.map((q, i) => ({
+          lab_id: lab.id,
+          question_text: q.question_text,
+          question_type: q.question_type,
+          options: q.options,
+          required: true,
+          position: i,
+        }))
+      )
+      if (questionsError) throw questionsError
+    }
 
-  revalidatePath('/teacher/labs')
-  revalidatePath(`/teacher/labs/${lab.id}/edit`)
-  return lab as { id: string }
+    revalidatePath('/teacher/labs')
+    revalidatePath(`/teacher/labs/${lab.id}/edit`)
+    return { ok: true as const, lab: { id: lab.id as string } }
+  } catch (err) {
+    console.error('createLabWithContent failed', err)
+    if (labId) {
+      await db.from('labs').delete().eq('id', labId)
+    }
+    return {
+      ok: false as const,
+      error: 'Could not save the generated lab draft. Please try generating again.',
+    }
+  }
 }
 
 // ── Pre-Lab Questions ────────────────────────────────────────────────────────
@@ -355,6 +406,7 @@ export async function saveRubricItems(
   items: Array<{ title: string; description?: string; max_points: number; position: number }>
 ) {
   const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   const { error: delError } = await db.from('rubric_items').delete().eq('lab_id', labId)
   if (delError) throw delError
