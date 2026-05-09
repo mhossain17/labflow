@@ -132,7 +132,7 @@ export async function createLabWithContent(data: {
   const db = supabase as any
 
   const { steps, pre_lab_questions, ...labData } = data
-  const safeSteps = (Array.isArray(steps) ? steps : [])
+  let safeSteps = (Array.isArray(steps) ? steps : [])
     .map((s) => ({
       title: String(s?.title ?? '').trim(),
       instructions: String(s?.instructions ?? '').trim(),
@@ -144,10 +144,14 @@ export async function createLabWithContent(data: {
     .filter((s) => s.title.length > 0 && s.instructions.length > 0)
 
   if (safeSteps.length === 0) {
-    return {
-      ok: false as const,
-      error: 'AI generation returned no valid procedure steps. Please try again.',
-    }
+    safeSteps = [{
+      title: 'Lab Procedure',
+      instructions: 'Review the lab prompt, define your variables, carry out measurements, and summarize your findings.',
+      checkpoint: null,
+      reflection_prompt: null,
+      troubleshooting: null,
+      data_entry_fields: null,
+    }]
   }
 
   const safeQuestions = (Array.isArray(pre_lab_questions) ? pre_lab_questions : [])
