@@ -2,6 +2,7 @@ import { getLabWithSteps, getLabAssignments, listAvailableClasses } from '@/feat
 import { getProfile } from '@/lib/auth/session'
 import { LabStatusBadge } from '@/components/teacher/lab-builder/LabStatusBadge'
 import { AssignLabDialog } from '@/components/teacher/lab-builder/AssignLabDialog'
+import { LabPrintButton } from '@/components/teacher/lab-builder/LabPrintButton'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -60,6 +61,7 @@ export default async function LabDetailPage({ params }: LabDetailPageProps) {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <LabStatusBadge status={lab.status as LabStatus} />
+            <LabPrintButton labId={labId} />
             <Button variant="outline" size="sm" render={<Link href={`/teacher/labs/${labId}/edit`} />}>
               <Pencil className="size-4" />
               Edit
