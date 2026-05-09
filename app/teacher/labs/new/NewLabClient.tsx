@@ -78,14 +78,27 @@ export function NewLabClient({ aiEnabled }: Props) {
         pre_lab_questions: generated.pre_lab_questions ?? [],
       })
 
-      if (!result.ok) {
-        setError(result.error)
+      let createdLabId: string | null = null
+      if (result && typeof result === 'object' && 'ok' in result) {
+        if (!result.ok) {
+          setError(result.error)
+          setPhase('idle')
+          return
+        }
+        createdLabId = result.lab?.id ?? (result as { id?: string }).id ?? null
+      } else if (result && typeof result === 'object' && 'id' in result) {
+        // Backward compatibility: older server action shape returned the lab directly.
+        createdLabId = (result as { id?: string }).id ?? null
+      }
+
+      if (!createdLabId) {
+        setError('Lab was generated, but we could not open it automatically. Please check your labs list.')
         setPhase('idle')
         return
       }
 
       setPhase('done')
-      router.push(`/teacher/labs/${result.lab.id}/edit?step=1`)
+      router.push(`/teacher/labs/${createdLabId}/edit?step=1`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setPhase('idle')

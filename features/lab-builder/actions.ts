@@ -212,7 +212,12 @@ export async function createLabWithContent(data: {
 
     revalidatePath('/teacher/labs')
     revalidatePath(`/teacher/labs/${lab.id}/edit`)
-    return { ok: true as const, lab: { id: lab.id as string } }
+    return {
+      ok: true as const,
+      // Keep top-level id for backward compatibility with previously loaded client bundles.
+      id: lab.id as string,
+      lab: { id: lab.id as string },
+    }
   } catch (err) {
     console.error('createLabWithContent failed', err)
     if (labId) {
