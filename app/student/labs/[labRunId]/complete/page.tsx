@@ -10,6 +10,7 @@ import { submitLab } from '@/features/lab-runner/actions'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { CheckCircle2, Clock, ArrowLeft, Zap } from 'lucide-react'
+import { LabRunPrintButton } from '@/components/shared/LabRunPrintButton'
 import { normalizeAndSortLabSteps } from '@/lib/labs/steps'
 import { getRubricItems } from '@/features/lab-builder/queries'
 import { SelfAssessment } from '@/components/student/lab-runner/SelfAssessment'
@@ -145,7 +146,8 @@ export default async function CompletePage({ params }: Props) {
             />
           )}
 
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-3 flex-wrap">
+            <LabRunPrintButton labRunId={labRunId} label="Print My Lab" size="default" />
             <Button variant="outline" size="lg" render={<Link href="/student/labs" />}>
               <ArrowLeft className="size-4" />
               View All Labs

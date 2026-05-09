@@ -4,6 +4,7 @@ import { GradingSheet } from '@/components/teacher/grading/GradingSheet'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, MessageSquare, Database } from 'lucide-react'
+import { LabRunPrintButton } from '@/components/shared/LabRunPrintButton'
 import { normalizeAndSortLabSteps } from '@/lib/labs/steps'
 
 interface Props {
@@ -34,8 +35,13 @@ export default async function GradeRunPage({ params }: Props) {
         Back to submissions
       </Link>
 
-      <h1 className="text-2xl font-bold">Grading: {studentName}</h1>
-      <p className="text-muted-foreground -mt-4">{run.labs?.title}</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Grading: {studentName}</h1>
+          <p className="text-muted-foreground mt-0.5">{run.labs?.title}</p>
+        </div>
+        <LabRunPrintButton labRunId={labRunId} label="Print Student Lab" />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left: Student responses */}
