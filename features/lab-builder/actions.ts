@@ -1,6 +1,31 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { getProfile, getRealProfile } from '@/lib/auth/session'
+import { createAdminClient } from '@/lib/supabase/admin'
+
+async function getLabInsertContext() {
+  const [actingProfile, realProfile] = await Promise.all([
+    getProfile(),
+    getRealProfile(),
+  ])
+
+  if (!actingProfile) throw new Error('Unauthorized')
+  if (!actingProfile.organization_id) throw new Error('Organization is required')
+
+  const isImpersonating = Boolean(realProfile && realProfile.id !== actingProfile.id)
+
+  if (isImpersonating) {
+    const adminClient = createAdminClient()
+    if (!adminClient) throw new Error('Admin API not available — check SUPABASE_SERVICE_ROLE_KEY')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { db: adminClient as any, actingProfile }
+  }
+
+  const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { db: supabase as any, actingProfile }
+}
 
 // ── Lab CRUD ────────────────────────────────────────────────────────────────
 
@@ -18,11 +43,17 @@ export async function createLab(data: {
   estimated_minutes?: number
   ai_generated?: boolean
 }) {
-  const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: lab, error } = await (supabase as any)
+  const { db, actingProfile } = await getLabInsertContext()
+
+  const { data: lab, error } = await db
     .from('labs')
-    .insert({ status: 'draft', ...data })
+    .insert({
+      status: 'draft',
+      ...data,
+      // Never trust client-provided ownership fields.
+      teacher_id: actingProfile.id,
+      organization_id: actingProfile.organization_id,
+    })
     .select()
     .single()
   if (error) throw error
@@ -127,9 +158,7 @@ export async function createLabWithContent(data: {
     options?: string[]
   }>
 }) {
-  const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
+  const { db, actingProfile } = await getLabInsertContext()
 
   const { steps, pre_lab_questions, ...labData } = data
   let safeSteps = (Array.isArray(steps) ? steps : [])
@@ -180,7 +209,13 @@ export async function createLabWithContent(data: {
   try {
     const { data: lab, error: labError } = await db
       .from('labs')
-      .insert({ status: 'draft', ...labData })
+      .insert({
+        status: 'draft',
+        ...labData,
+        // Never trust client-provided ownership fields.
+        teacher_id: actingProfile.id,
+        organization_id: actingProfile.organization_id,
+      })
       .select()
       .single()
     if (labError) throw labError
