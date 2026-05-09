@@ -598,7 +598,18 @@ export function LabBuilderForm({ lab, initialStep = 1, initialRubricItems }: Lab
               title: i.title,
               description: i.description ?? '',
               max_points: i.max_points,
-            }))} />
+            }))}
+            context={{
+              labTitle: watch('title'),
+              labOverview: watch('overview'),
+              objectives: (watch('objectives') ?? []).map((o) => o.value).filter(Boolean),
+              standards: (watch('standards') ?? []).map((s) => s.value).filter(Boolean),
+              steps: (watch('steps') ?? []).map((s) => ({
+                title: s.title,
+                instructions: s.instructions,
+              })),
+            }}
+            />
           </div>
         )}
 

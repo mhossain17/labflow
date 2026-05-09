@@ -6,6 +6,7 @@ const requestCounts = new Map<string, { count: number; resetAt: number }>()
 
 const LIMITS: Record<string, number> = {
   'ai_lab_generation': 10,   // 10 lab generations per org per hour
+  'ai_rubric_generation': 30, // 30 rubric generations per org per hour
   'help_chat': 100,           // 100 help messages per org per hour
 }
 
