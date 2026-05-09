@@ -3,6 +3,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/shared/ThemeProvider'
 import { Toaster } from 'sonner'
 import { ImpersonationBanner } from '@/components/shared/ImpersonationBanner'
+import { ThemeToggle } from '@/components/shared/ThemeToggle'
 
 export const metadata: Metadata = {
   title: 'LabFlow',
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           <ImpersonationBanner />
           {children}
+          <ThemeToggle />
           <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
