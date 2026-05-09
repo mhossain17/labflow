@@ -133,7 +133,7 @@ export function HelpChat({
       <div className="flex-1 overflow-y-auto space-y-3 min-h-[200px] max-h-[350px] pr-1">
         {history.length === 0 && !streamingText && (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Describe what&apos;s happening and I&apos;ll help guide you.
+            Hi! I&apos;m Flowy. Describe what&apos;s happening and I&apos;ll help guide you.
           </p>
         )}
 
@@ -208,7 +208,7 @@ export function HelpChat({
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        I&apos;ll guide you with questions rather than giving direct answers.
+        Flowy guides you with questions rather than giving direct answers.
       </p>
     </div>
   )

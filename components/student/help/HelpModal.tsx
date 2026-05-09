@@ -89,7 +89,7 @@ export function HelpModal({
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-base">
                 {stage === 'troubleshooting' && 'Troubleshooting Guide'}
-                {stage === 'chat' && 'AI Lab Assistant'}
+                {stage === 'chat' && 'Flowy'}
                 {stage === 'escalated' && 'Teacher Help Requested'}
               </h2>
               <button
