@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { searchStudentsByNameOrEmail, enrollOrInviteByEmail } from '@/features/teacher/actions'
 import { Upload, UserPlus, Search, Mail } from 'lucide-react'
 import { CSVUploadDialog } from './CSVUploadDialog'
+import { GoogleClassroomSyncDialog } from './GoogleClassroomSyncDialog'
 
 interface StudentResult {
   id: string
@@ -17,9 +18,12 @@ interface StudentResult {
 interface AddStudentFormProps {
   classId: string
   orgId: string
+  gcEnabled?: boolean
+  gcIsConnected?: boolean
+  gcLinkedCourse?: { id: string; name: string } | null
 }
 
-export function AddStudentForm({ classId, orgId }: AddStudentFormProps) {
+export function AddStudentForm({ classId, orgId, gcEnabled, gcIsConnected, gcLinkedCourse }: AddStudentFormProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<StudentResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -28,6 +32,7 @@ export function AddStudentForm({ classId, orgId }: AddStudentFormProps) {
   const [success, setSuccess] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [csvOpen, setCsvOpen] = useState(false)
+  const [gcOpen, setGcOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -217,6 +222,19 @@ export function AddStudentForm({ classId, orgId }: AddStudentFormProps) {
           <Upload className="size-4" />
           Import CSV
         </Button>
+
+        {/* Google Classroom sync button (feature-flagged) */}
+        {gcEnabled && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={() => setGcOpen(true)}
+          >
+            <GoogleClassroomMiniIcon />
+            {gcLinkedCourse ? 'Sync Roster' : 'Google Classroom'}
+          </Button>
+        )}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -229,6 +247,28 @@ export function AddStudentForm({ classId, orgId }: AddStudentFormProps) {
         open={csvOpen}
         onOpenChange={setCsvOpen}
       />
+
+      {gcEnabled && (
+        <GoogleClassroomSyncDialog
+          classId={classId}
+          open={gcOpen}
+          onOpenChange={setGcOpen}
+          isConnected={!!gcIsConnected}
+          linkedCourse={gcLinkedCourse ?? null}
+        />
+      )}
     </div>
+  )
+}
+
+function GoogleClassroomMiniIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <rect width="48" height="48" rx="4" fill="#0F9D58"/>
+      <rect x="10" y="14" width="28" height="20" rx="2" fill="white"/>
+      <rect x="14" y="18" width="20" height="12" rx="1" fill="#0F9D58"/>
+      <circle cx="24" cy="24" r="4" fill="white"/>
+      <circle cx="24" cy="24" r="2.5" fill="#0F9D58"/>
+    </svg>
   )
 }

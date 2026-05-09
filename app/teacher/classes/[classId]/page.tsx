@@ -9,6 +9,9 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, FlaskConical, Users } from 'lucide-react'
 import { notFound as nextNotFound } from 'next/navigation'
 import type { LabStatus } from '@/types/app'
+import { checkFeatureFlag } from '@/lib/ai/check-feature-flag'
+import { hasGoogleConnected } from '@/lib/google-classroom/tokens'
+import { createClient } from '@/lib/supabase/server'
 
 interface ClassDetailPageProps {
   params: Promise<{ classId: string }>
@@ -19,11 +22,27 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
   const profile = await getProfile()
   if (!profile) redirect('/login')
 
-  const [cls, assignments, permissions] = await Promise.all([
+  const supabase = await createClient()
+  const [cls, assignments, permissions, gcEnabled, gcIsConnected] = await Promise.all([
     getClassWithEnrollments(classId),
     getClassLabAssignments(classId),
     getTeacherPermissionsForClass(profile.id, classId),
+    checkFeatureFlag('google_classroom_sync'),
+    hasGoogleConnected(profile.id),
   ])
+
+  // Fetch linked Google course for this class if sync is enabled
+  let gcLinkedCourse: { id: string; name: string } | null = null
+  if (gcEnabled) {
+    const { data: link } = await (supabase as any)
+      .from('google_classroom_links')
+      .select('google_course_id, google_course_name')
+      .eq('class_id', classId)
+      .maybeSingle()
+    if (link) {
+      gcLinkedCourse = { id: link.google_course_id, name: link.google_course_name ?? 'Linked course' }
+    }
+  }
 
   if (!cls) notFound()
 
@@ -101,7 +120,15 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
             </span>
           </h2>
         </div>
-        {canManageRoster && <AddStudentForm classId={classId} orgId={profile.organization_id ?? ''} />}
+        {canManageRoster && (
+          <AddStudentForm
+            classId={classId}
+            orgId={profile.organization_id ?? ''}
+            gcEnabled={gcEnabled}
+            gcIsConnected={gcIsConnected}
+            gcLinkedCourse={gcLinkedCourse}
+          />
+        )}
         <EnrollmentTable classId={classId} enrollments={allEnrollments} canManageRoster={canManageRoster} />
       </section>
 

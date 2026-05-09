@@ -17,9 +17,10 @@ VALUES (
 
 -- Feature flags for demo org (all enabled)
 INSERT INTO public.feature_flags (organization_id, flag_key, enabled) VALUES
-  ('aaaaaaaa-0000-0000-0000-000000000001'::uuid, 'ai_lab_generation', true),
-  ('aaaaaaaa-0000-0000-0000-000000000001'::uuid, 'help_chat',         true),
-  ('aaaaaaaa-0000-0000-0000-000000000001'::uuid, 'analytics',         true)
+  ('aaaaaaaa-0000-0000-0000-000000000001'::uuid, 'ai_lab_generation',      true),
+  ('aaaaaaaa-0000-0000-0000-000000000001'::uuid, 'help_chat',              true),
+  ('aaaaaaaa-0000-0000-0000-000000000001'::uuid, 'analytics',              true),
+  ('aaaaaaaa-0000-0000-0000-000000000001'::uuid, 'google_classroom_sync',  false)
 ON CONFLICT (organization_id, flag_key) DO NOTHING;
 
 -- NOTE: After running seed-users.ts to create auth users,

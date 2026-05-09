@@ -18,6 +18,10 @@ const FLAG_META: Record<string, { label: string; description: string }> = {
     label: 'Analytics Dashboard',
     description: 'Show analytics and insights in teacher dashboard',
   },
+  google_classroom_sync: {
+    label: 'Google Classroom Sync',
+    description: 'Allow teachers to import and sync student rosters from Google Classroom',
+  },
 }
 
 const ALL_FLAGS = Object.keys(FLAG_META)
